@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Components/ArrowComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -12,6 +13,7 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "Footprints.h"
 #include "ShooterCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -31,6 +33,16 @@ private:
 	/**HUD*/
 	UPROPERTY(EditAnywhere, Category = "HUD", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> PlayerDisplayWidget;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
+		class UFootprints* Footprint;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
+		class UArrowComponent* RightFootArrow;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
+		class UArrowComponent* LeftFootArrow;
+
 
 public:
 	AShooterCharacter();
@@ -83,5 +95,10 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	/** Returns RightFootArrow subobject **/
+	FORCEINLINE class UArrowComponent* GetRightFootArrow() const { return RightFootArrow; }
+	/** Returns LeftFootArrow subobject **/
+	FORCEINLINE class UArrowComponent* GetLeftFootArrow() const { return LeftFootArrow; }
+
 };
 
