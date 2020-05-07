@@ -11,6 +11,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Blueprint/UserWidget.h"
 #include "ShooterCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -26,6 +27,11 @@ private:
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
+	/**HUD*/
+	UPROPERTY(EditAnywhere, Category = "HUD", meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<UUserWidget> PlayerDisplayWidget;
+
 public:
 	AShooterCharacter();
 
@@ -38,6 +44,8 @@ public:
 	float BaseLookUpRate;
 
 protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
 
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
@@ -66,10 +74,9 @@ protected:
 	/** Handler for when a touch input stops. */
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 
-protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	// End of APawn interface
+	
 
 public:
 	/** Returns CameraBoom subobject **/

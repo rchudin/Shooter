@@ -41,6 +41,20 @@ AShooterCharacter::AShooterCharacter()
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 }
 
+// Called when the game starts or when spawned
+void AShooterCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Set HUD player screen
+	UWorld* World = GetWorld();
+	if (PlayerDisplayWidget && World && (!HasAuthority() || GetNetMode() != NM_DedicatedServer))
+	{
+		UUserWidget* WidgetInstance = CreateWidget<UUserWidget>(World, PlayerDisplayWidget);
+		WidgetInstance->AddToPlayerScreen();
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -69,6 +83,8 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	// VR headset functionality
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AShooterCharacter::OnResetVR);
 }
+
+
 
 
 void AShooterCharacter::OnResetVR()
