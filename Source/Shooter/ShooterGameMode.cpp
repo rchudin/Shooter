@@ -2,6 +2,7 @@
 
 #include "ShooterGameMode.h"
 #include "Character/ShooterCharacter.h"
+#include "Character/ShooterPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
 
 AShooterGameMode::AShooterGameMode()
@@ -11,5 +12,6 @@ AShooterGameMode::AShooterGameMode()
 	if (PlayerPawnBPClass.Class != NULL)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
+		PlayerControllerClass = AShooterPlayerController::StaticClass();
 	}
 }

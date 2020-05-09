@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright © 2020 ruslanchudin.com
 #define SURFACE_TYPE_Sand    SurfaceType1
 
 #include "Footprints.h"
@@ -55,7 +55,21 @@ void UFootprints::FootDown(const UArrowComponent* FootArrow)
 
 UParticleSystem* UFootprints::GetFootprintFX(UPhysicalMaterial* PhysMaterial)
 {
-	return nullptr;
+	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(PhysMaterial);
+
+	UParticleSystem* Result = nullptr;
+
+	switch (SurfaceType)
+	{
+	case SURFACE_TYPE_Sand:
+		Result = SandFX;
+		break;
+	default:
+		Result = DefaultFX;
+		break;
+	}
+
+	return Result;
 }
 
 UMaterialInterface* UFootprints::GetFootprintDecal(UPhysicalMaterial* PhysMaterial)

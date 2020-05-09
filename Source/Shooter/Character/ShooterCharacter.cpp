@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright © 2020 ruslanchudin.com
 
 #include "ShooterCharacter.h"
 
@@ -17,7 +17,7 @@ AShooterCharacter::AShooterCharacter()
 
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
+	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = false;
 
 	// Configure character movement
@@ -38,14 +38,13 @@ AShooterCharacter::AShooterCharacter()
 	FollowCamera->bUsePawnControlRotation = false; 
 
 	// Footprint
-
 	Footprint = CreateDefaultSubobject<UFootprints>(TEXT("Footprint"));
 
 	LeftFootArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftFootArrow"));
-	LeftFootArrow->SetupAttachment(GetMesh(), "ball_l");
+	LeftFootArrow->SetupAttachment(GetMesh(), FName("footprint_l"));
 	
 	RightFootArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("RightFootArrow"));
-	RightFootArrow->SetupAttachment(GetMesh(), "ball_r");
+	RightFootArrow->SetupAttachment(GetMesh(), FName("footprint_r"));
 }
 
 // Called when the game starts or when spawned
