@@ -14,6 +14,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Footprints.h"
+#include "../Weapon/WeaponManager.h"
 #include "ShooterCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -26,14 +27,19 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
 
+	/** First person camera*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UCameraComponent* FirstPersonCamera;
+
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* FollowCamera;
+	class UCameraComponent* ThirdPersonCamera;
 
 	/**HUD*/
 	UPROPERTY(EditAnywhere, Category = "HUD", meta = (AllowPrivateAccess = "true"))
 		TSubclassOf<UUserWidget> PlayerDisplayWidget;
 
+	/** Footprint */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
 		class UFootprints* Footprint;
 
@@ -42,6 +48,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
 		class UArrowComponent* LeftFootArrow;
+
+	/** Weapon manager*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+		class UWeaponManager* WeaponManager;
 
 
 public:
@@ -58,6 +68,9 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	// APawn interface
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
@@ -86,15 +99,14 @@ protected:
 	/** Handler for when a touch input stops. */
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 
-	// APawn interface
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
+	/** Camera change from first person or third person */
+	void ToggleCamera();
 
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { FirstPersonCamera->IsActive() ? FirstPersonCamera : ThirdPersonCamera; }
 	/** Returns RightFootArrow subobject **/
 	FORCEINLINE class UArrowComponent* GetRightFootArrow() const { return RightFootArrow; }
 	/** Returns LeftFootArrow subobject **/

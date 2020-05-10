@@ -9,7 +9,12 @@
 AShooterCharacter::AShooterCharacter()
 {
 	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	float CapsuleHeight = 96.0f;
+	float CapsuleRadius = 42.0f;
+	GetCapsuleComponent()->InitCapsuleSize(CapsuleRadius, CapsuleHeight);
+
+	// set location and rotation mash
+	GetMesh()->SetWorldLocationAndRotation(FVector(0.0f, 0.0f, CapsuleHeight * -1), FRotator(0.0f, -90.0f, 0.0f));
 
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
@@ -32,10 +37,18 @@ AShooterCharacter::AShooterCharacter()
 	CameraBoom->TargetArmLength = 300.0f; 
 	CameraBoom->bUsePawnControlRotation = true;
 
-	// Create a follow camera
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); 
-	FollowCamera->bUsePawnControlRotation = false; 
+	// Create a third person camera
+	ThirdPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
+	ThirdPersonCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+	ThirdPersonCamera->bUsePawnControlRotation = false;
+	ThirdPersonCamera->SetAutoActivate(false);
+
+	// Create a first person camera
+	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	FirstPersonCamera->SetWorldLocationAndRotation(FVector(0.0f, 7.0f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
+	FirstPersonCamera->SetupAttachment(GetMesh(), "head");
+	FirstPersonCamera->bUsePawnControlRotation = true;
+	FirstPersonCamera->SetAutoActivate(true);
 
 	// Footprint
 	Footprint = CreateDefaultSubobject<UFootprints>(TEXT("Footprint"));
@@ -45,6 +58,10 @@ AShooterCharacter::AShooterCharacter()
 	
 	RightFootArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("RightFootArrow"));
 	RightFootArrow->SetupAttachment(GetMesh(), FName("footprint_r"));
+
+	// Weapon Manager
+	WeaponManager = CreateDefaultSubobject<UWeaponManager>(TEXT("WeaponManager"));
+	WeaponManager->SetupAttachment(this);
 }
 
 // Called when the game starts or when spawned
@@ -59,7 +76,41 @@ void AShooterCharacter::BeginPlay()
 		UUserWidget* WidgetInstance = CreateWidget<UUserWidget>(World, PlayerDisplayWidget);
 		WidgetInstance->AddToPlayerScreen();
 	}
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		PlayerController->PlayerCameraManager->ViewPitchMax = 70.0f;
+		PlayerController->PlayerCameraManager->ViewPitchMin = -80.0f;
+	}
 }
+
+void AShooterCharacter::ToggleCamera()
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+
+	if (ThirdPersonCamera->IsActive())
+	{
+		ThirdPersonCamera->Deactivate();
+		FirstPersonCamera->Activate();
+		if (PlayerController)
+		{
+			PlayerController->PlayerCameraManager->ViewPitchMax = 70.0f;
+			PlayerController->PlayerCameraManager->ViewPitchMin = -80.0f;
+		}
+	}
+	else
+	{
+		FirstPersonCamera->Deactivate();
+		ThirdPersonCamera->Activate();
+		if (PlayerController)
+		{
+			PlayerController->PlayerCameraManager->ViewPitchMax = 90.0f;
+			PlayerController->PlayerCameraManager->ViewPitchMin = -90.0f;
+		}
+	}
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -73,6 +124,8 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterCharacter::MoveRight);
+
+	PlayerInputComponent->BindAction("ToggleCamera", IE_Pressed, this, &AShooterCharacter::ToggleCamera);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
@@ -107,6 +160,7 @@ void AShooterCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Loca
 {
 		StopJumping();
 }
+
 
 void AShooterCharacter::TurnAtRate(float Rate)
 {
