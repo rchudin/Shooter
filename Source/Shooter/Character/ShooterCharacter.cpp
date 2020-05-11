@@ -61,7 +61,6 @@ AShooterCharacter::AShooterCharacter()
 
 	// Weapon Manager
 	WeaponManager = CreateDefaultSubobject<UWeaponManager>(TEXT("WeaponManager"));
-	WeaponManager->SetupAttachment(this);
 }
 
 // Called when the game starts or when spawned
@@ -71,7 +70,7 @@ void AShooterCharacter::BeginPlay()
 
 	// Set HUD player screen
 	UWorld* World = GetWorld();
-	if (PlayerDisplayWidget && World && (!HasAuthority() || GetNetMode() != NM_DedicatedServer))
+	if (PlayerDisplayWidget && World && (!HasAuthority() || GetNetMode() == NM_ListenServer))
 	{
 		UUserWidget* WidgetInstance = CreateWidget<UUserWidget>(World, PlayerDisplayWidget);
 		WidgetInstance->AddToPlayerScreen();

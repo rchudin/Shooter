@@ -111,6 +111,7 @@ public:
 	FORCEINLINE class UArrowComponent* GetRightFootArrow() const { return RightFootArrow; }
 	/** Returns LeftFootArrow subobject **/
 	FORCEINLINE class UArrowComponent* GetLeftFootArrow() const { return LeftFootArrow; }
-
+	/** Returns WeaponManager subobject **/
+	FORCEINLINE class UWeaponManager* GetWeaponManager() const { return WeaponManager; }
 };
 
