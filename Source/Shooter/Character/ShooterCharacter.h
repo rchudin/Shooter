@@ -1,4 +1,4 @@
-// Copyright © 2020 ruslanchudin.com
+// Copyright Â© 2020 ruslanchudin.com
 
 #pragma once
 
@@ -102,11 +102,19 @@ protected:
 	/** Camera change from first person or third person */
 	void ToggleCamera();
 
+	/** Function that handles firing */
+	void Fire();
+
+	void StopFire();
+	
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+        FRotator GetAimRotation(int BoneCount) const;
+
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { FirstPersonCamera->IsActive() ? FirstPersonCamera : ThirdPersonCamera; }
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FirstPersonCamera->IsActive() ? FirstPersonCamera : ThirdPersonCamera; }
 	/** Returns RightFootArrow subobject **/
 	FORCEINLINE class UArrowComponent* GetRightFootArrow() const { return RightFootArrow; }
 	/** Returns LeftFootArrow subobject **/

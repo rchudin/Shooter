@@ -1,4 +1,4 @@
-// Copyright © 2020 ruslanchudin.com
+// Copyright Â© 2020 ruslanchudin.com
 
 #pragma once
 
@@ -41,15 +41,15 @@ public:
 	UFootprints();
 
 	UFUNCTION(BlueprintCallable, Category = "Character")
-		void FootDown(const UArrowComponent* FootArrow);
+		void FootDown(const UArrowComponent* FootArrow) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Character")
-	UParticleSystem* GetFootprintFX(UPhysicalMaterial* PhysMaterial);
+	UParticleSystem* GetFootprintFX(UPhysicalMaterial* PhysMaterial) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Character")
-	UMaterialInterface* GetFootprintDecal(UPhysicalMaterial* PhysMaterial);
+	UMaterialInterface* GetFootprintDecal(UPhysicalMaterial* PhysMaterial) const;
 
 
 protected:
-	void Trace(FHitResult& OutHit, FVector& Location);
+	void Trace(FHitResult& OutHit, FVector& Location) const;
 };

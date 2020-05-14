@@ -2,6 +2,14 @@
 /Content/*
 !/Content/Shooter
 
+# Visual Studio Code
+.vscode/
+Shooter.code-workspace
+
+#Clion
+.idea/
+cmake-build-debug/
+CMakeLists.txt
 
 # Visual Studio 2015 user specific files
 .vs/
@@ -40,6 +48,7 @@
 *.xcodeproj
 *.xcworkspace
 *.sln
+*.sln.*
 *.suo
 *.opensdf
 *.sdf
@@ -74,6 +83,7 @@ Saved/*
 # Compiled source files for the engine to use
 Intermediate/*
 Plugins/*/Intermediate/*
+Plugins/*/RiderLink/*
 
 # Cache files for the editor to use
 DerivedDataCache/*

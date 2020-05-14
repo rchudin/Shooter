@@ -1,5 +1,5 @@
-// Copyright © 2020 ruslanchudin.com
-#define SURFACE_TYPE_Sand    SurfaceType1
+// Copyright Â© 2020 ruslanchudin.com
+#define SURFACE_TYPE_SAND    SurfaceType1
 
 #include "Footprints.h"
 
@@ -12,16 +12,15 @@ UFootprints::UFootprints()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
 }
 
-void UFootprints::FootDown(const UArrowComponent* FootArrow)
+void UFootprints::FootDown(const UArrowComponent* FootArrow) const
 {
 	if (FootArrow) {
 		FHitResult HitResult;
 		FVector FootWorldPosition = FootArrow->GetComponentTransform().GetLocation();
 
-		FVector Forward = FootArrow->GetForwardVector();
+		const FVector Forward = FootArrow->GetForwardVector();
 		Trace(HitResult, FootWorldPosition);
 
 		// Debug vis
@@ -35,9 +34,9 @@ void UFootprints::FootDown(const UArrowComponent* FootArrow)
 
 		// Create a rotator using the landscape normal and our foot forward vectors
 		// Note that we use the function ZX to enforce the normal direction (Z)
-		FQuat floorRot = FRotationMatrix::MakeFromZX(HitResult.Normal, Forward).ToQuat();
-		FQuat offsetRot(FRotator(0.0f, -90.0f, 0.0f));
-		FRotator Rotation = (floorRot * offsetRot).Rotator();
+		const FQuat FloorRot = FRotationMatrix::MakeFromZX(HitResult.Normal, Forward).ToQuat();
+		const FQuat OffsetRot(FRotator(0.0f, -90.0f, 0.0f));
+		const FRotator Rotation = (FloorRot * OffsetRot).Rotator();
 
 		// Spawn decal and particle emitter
 		if (DecalMaterial) {
@@ -53,15 +52,15 @@ void UFootprints::FootDown(const UArrowComponent* FootArrow)
 	}
 }
 
-UParticleSystem* UFootprints::GetFootprintFX(UPhysicalMaterial* PhysMaterial)
+UParticleSystem* UFootprints::GetFootprintFX(UPhysicalMaterial* PhysMaterial) const
 {
-	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(PhysMaterial);
+	const EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(PhysMaterial);
 
-	UParticleSystem* Result = nullptr;
+	UParticleSystem* Result;
 
 	switch (SurfaceType)
 	{
-	case SURFACE_TYPE_Sand:
+	case SURFACE_TYPE_SAND:
 		Result = SandFX;
 		break;
 	default:
@@ -72,34 +71,32 @@ UParticleSystem* UFootprints::GetFootprintFX(UPhysicalMaterial* PhysMaterial)
 	return Result;
 }
 
-UMaterialInterface* UFootprints::GetFootprintDecal(UPhysicalMaterial* PhysMaterial)
+UMaterialInterface* UFootprints::GetFootprintDecal(UPhysicalMaterial* PhysMaterial) const
 {
-	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(PhysMaterial); 
+	const EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(PhysMaterial); 
 
-	UMaterialInterface* Result = nullptr;
+	UMaterialInterface* Result;
 
 	switch (SurfaceType)
 	{
-		case SURFACE_TYPE_Sand:
+		case SURFACE_TYPE_SAND:
 			Result =  SandFootprint;
 			break;
 		default: 
 			Result = DefaultFootprint;
 			break;
 	}
-
+	
 	return Result;
 }
 
-void UFootprints::Trace(FHitResult& OutHit, FVector& Location)
+void UFootprints::Trace(FHitResult& OutHit, FVector& Location) const
 {
 	FVector Start = Location;
 	FVector End = Location;
 
 	Start.Z += 20.0f;
 	End.Z -= 20.0f;
-
-
 
 	OutHit = FHitResult(ForceInit);
 

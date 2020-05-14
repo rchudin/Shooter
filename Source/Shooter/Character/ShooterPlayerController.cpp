@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright © 2020 ruslanchudin.com
 
 
 #include "ShooterPlayerController.h"

@@ -1,6 +1,8 @@
-// Copyright © 2020 ruslanchudin.com
+// Copyright Â© 2020 ruslanchudin.com
 
 #include "ShooterCharacter.h"
+
+
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -9,8 +11,8 @@
 AShooterCharacter::AShooterCharacter()
 {
 	// Set size for collision capsule
-	float CapsuleHeight = 96.0f;
-	float CapsuleRadius = 42.0f;
+	const float CapsuleHeight = 96.0f;
+	const float CapsuleRadius = 42.0f;
 	GetCapsuleComponent()->InitCapsuleSize(CapsuleRadius, CapsuleHeight);
 
 	// set location and rotation mash
@@ -54,10 +56,10 @@ AShooterCharacter::AShooterCharacter()
 	Footprint = CreateDefaultSubobject<UFootprints>(TEXT("Footprint"));
 
 	LeftFootArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftFootArrow"));
-	LeftFootArrow->SetupAttachment(GetMesh(), FName("footprint_l"));
+	LeftFootArrow->SetupAttachment(GetMesh(), FName("skt_footprint_l"));
 	
 	RightFootArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("RightFootArrow"));
-	RightFootArrow->SetupAttachment(GetMesh(), FName("footprint_r"));
+	RightFootArrow->SetupAttachment(GetMesh(), FName("skt_footprint_r"));
 
 	// Weapon Manager
 	WeaponManager = CreateDefaultSubobject<UWeaponManager>(TEXT("WeaponManager"));
@@ -70,7 +72,7 @@ void AShooterCharacter::BeginPlay()
 
 	// Set HUD player screen
 	UWorld* World = GetWorld();
-	if (PlayerDisplayWidget && World && (!HasAuthority() || GetNetMode() == NM_ListenServer))
+	if (PlayerDisplayWidget && World && (!HasAuthority() || GetNetMode() == NM_Standalone))
 	{
 		UUserWidget* WidgetInstance = CreateWidget<UUserWidget>(World, PlayerDisplayWidget);
 		WidgetInstance->AddToPlayerScreen();
@@ -110,10 +112,35 @@ void AShooterCharacter::ToggleCamera()
 	}
 }
 
+void AShooterCharacter::Fire()
+{
+	if (WeaponManager) {
+		AWeapon* Weapon = WeaponManager->GetCurrentWeapon();
+		if (Weapon) {
+			Weapon->Use();
+		}
+	}
+}
+
+void AShooterCharacter::StopFire()
+{
+	if (WeaponManager) {
+		AWeapon* Weapon = WeaponManager->GetCurrentWeapon();
+		if (Weapon) {
+			Weapon->StopUse();
+		}
+	}
+}
+
+FRotator AShooterCharacter::GetAimRotation(const int BoneCount) const
+{
+	const float RotationPitch = GetControlRotation().Pitch;
+	return FRotator(0.0f, 0.0f, (RotationPitch > 180.0f ? 360 - RotationPitch : RotationPitch * -1) / BoneCount);
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
-
 void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up gameplay key bindings
@@ -124,6 +151,9 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterCharacter::MoveRight);
 
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AShooterCharacter::Fire);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AShooterCharacter::StopFire);
+	
 	PlayerInputComponent->BindAction("ToggleCamera", IE_Pressed, this, &AShooterCharacter::ToggleCamera);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
@@ -141,8 +171,6 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	// VR headset functionality
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AShooterCharacter::OnResetVR);
 }
-
-
 
 
 void AShooterCharacter::OnResetVR()
@@ -175,7 +203,7 @@ void AShooterCharacter::LookUpAtRate(float Rate)
 
 void AShooterCharacter::MoveForward(float Value)
 {
-	if ((Controller != NULL) && (Value != 0.0f))
+	if ((Controller) && (Value != 0.0f))
 	{
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -189,7 +217,7 @@ void AShooterCharacter::MoveForward(float Value)
 
 void AShooterCharacter::MoveRight(float Value)
 {
-	if ( (Controller != NULL) && (Value != 0.0f) )
+	if ( Controller && (Value != 0.0f) )
 	{
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
