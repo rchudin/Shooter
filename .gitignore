@@ -2,6 +2,9 @@
 /Content/*
 !/Content/Shooter
 
+#Rider
+*h~
+
 # Visual Studio Code
 .vscode/
 Shooter.code-workspace

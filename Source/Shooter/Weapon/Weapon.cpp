@@ -23,7 +23,7 @@ AWeapon::AWeapon()
 	}
 
 	MaxAmmo = 30;
-	UseRate = 1.0f;
+	UseRate = 0.5f;
 }
 
 void AWeapon::BeginPlay()
@@ -54,29 +54,41 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	DOREPLIFETIME(AWeapon, CurrentAmmo);
 }
 
-void AWeapon::UseWeaponEffects_Implementation()
+void AWeapon::MulticastUseEffects_Implementation()
 {
 	if (!HasAuthority() || GetNetMode() == NM_Standalone) {
-		if (FireAnimation && Mesh) {
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("Effect"));
-			
-			Mesh->PlayAnimation(FireAnimation, false);
-		}
+		UseEffects();
 	}
 }
-
-// [Server] Use
-bool AWeapon::Use_Validate() { return CanBeUsed(); }
-void AWeapon::Use_Implementation() { UseWeapon(); }
-
-// [Server] StopUse
-bool AWeapon::StopUse_Validate(){return true;}
-void AWeapon::StopUse_Implementation(){}
 
 bool AWeapon::CanBeUsed() const
 {
 	if (CurrentAmmo <= 0) {
 		return false;
 	}
+
+	if (FireTimerHandle.IsValid() && GetWorldTimerManager().IsTimerActive(FireTimerHandle))
+	{
+		return false;
+	}
+	
 	return true;
+}
+
+// [Server] Use
+bool AWeapon::ServerUse_Validate() { return true; }
+void AWeapon::ServerUse_Implementation()
+{
+	FireTimerExpired = false;
+	Use();
+}
+
+// [Server] StopUse
+bool AWeapon::ServerStopUse_Validate(){return true;}
+void AWeapon::ServerStopUse_Implementation()
+{
+	if (FireTimerHandle.IsValid() && GetWorldTimerManager().IsTimerActive(FireTimerHandle))
+	{
+		FireTimerExpired = true;
+	}
 }

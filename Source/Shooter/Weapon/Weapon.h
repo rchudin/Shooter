@@ -21,22 +21,10 @@ UCLASS(Abstract)
 class SHOOTER_API AWeapon : public AActor
 {
 	GENERATED_BODY()
-private:
-	FTimerHandle FireTimerHandle;
-
-	// class AShooterCharacter* ParentCharacter;
-
+	
 	/** The main skeletal mesh*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh",meta = (AllowPrivateAccess = "true"))
 		class USkeletalMeshComponent* Mesh;
-
-	UPROPERTY(EditDefaultsOnly, Category = Animation) 
-		class UAnimationAsset* FireAnimation;
-
-	UPROPERTY(EditDefaultsOnly, Category = Animation) 
-		class UAnimationAsset* ReloadAnimation;
-
-	
 public:	
 	// Sets default values for this actor's properties
 	AWeapon();
@@ -44,16 +32,21 @@ public:
 	// [Server] Use
 	/** Function that handles firing */
 	UFUNCTION(Reliable, Server, WithValidation)
-		void Use();
+		void ServerUse();
 
 	// [Server] StopUse
 	/** Function that handles stop firing */
 	UFUNCTION(Reliable, Server, WithValidation)
-        void StopUse();
+        void ServerStopUse();
 
 	bool CanBeUsed() const;
 
 protected:
+	FTimerHandle FireTimerHandle;
+
+	//use toggle switch
+	bool FireTimerExpired;
+
 	// Called when the game starts or when spawned
     virtual void BeginPlay() override;
 	
@@ -66,21 +59,18 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Stats)
 		float UseRate;
 	
-	virtual void UseWeapon() { check(0 && "You must override this"); }
+	virtual void Use() { check(0 && "You must override this"); }
+
+	virtual void UseEffects() { check(0 && "You must override this"); }
 
 	void Trace(FHitResult& OutHit, FVector& Start, FVector& End) const;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION(Reliable, NetMulticast)
-            void UseWeaponEffects();
+		void MulticastUseEffects();
 	
-	/** Returns ParentCharacter subobject **/
-	// FORCEINLINE class AShooterCharacter* GetParentCharacter() const { return ParentCharacter; }
 public:	
 	/** Returns Mesh subobject **/
 	FORCEINLINE class USkeletalMeshComponent* GetMesh() const { return Mesh; }
-	/** Set ParentCharacter */
-	// FORCEINLINE void SetParentCharacter(AShooterCharacter* Character) { ParentCharacter = Character; }
-
 };

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"

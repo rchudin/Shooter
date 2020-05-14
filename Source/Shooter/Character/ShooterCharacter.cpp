@@ -117,7 +117,7 @@ void AShooterCharacter::Fire()
 	if (WeaponManager) {
 		AWeapon* Weapon = WeaponManager->GetCurrentWeapon();
 		if (Weapon) {
-			Weapon->Use();
+			Weapon->ServerUse();
 		}
 	}
 }
@@ -127,7 +127,7 @@ void AShooterCharacter::StopFire()
 	if (WeaponManager) {
 		AWeapon* Weapon = WeaponManager->GetCurrentWeapon();
 		if (Weapon) {
-			Weapon->StopUse();
+			Weapon->ServerStopUse();
 		}
 	}
 }
@@ -189,13 +189,13 @@ void AShooterCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Loca
 }
 
 
-void AShooterCharacter::TurnAtRate(float Rate)
+void AShooterCharacter::TurnAtRate(const float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
-void AShooterCharacter::LookUpAtRate(float Rate)
+void AShooterCharacter::LookUpAtRate(const float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
