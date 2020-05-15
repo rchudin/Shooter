@@ -134,15 +134,7 @@ void AShooterCharacter::StopFire()
 
 FRotator AShooterCharacter::GetAimRotation(const int BoneCount) const
 {
-	float RotationPitch;
-	if (GetController())
-	{
-		RotationPitch = GetControlRotation().Pitch;
-	}else
-	{
-		RotationPitch = RemoteViewPitch/(255.f/360.f);
-	}
-	
+	const float RotationPitch = GetBaseAimRotation().Pitch;
 	return FRotator(0.0f, 0.0f, (RotationPitch > 180.0f ? 360 - RotationPitch : RotationPitch * -1) / BoneCount);
 }
 

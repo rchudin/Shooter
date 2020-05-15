@@ -20,9 +20,15 @@ class SHOOTER_API AFireWeapon : public AWeapon
 
     UPROPERTY(EditDefaultsOnly, Category = Animation) 
         class UAnimationAsset* ReloadAnimation;
-    
+public:
+    /** Projectile class to spawn */
+    UPROPERTY(EditDefaultsOnly, Category = Projectile)
+        TSubclassOf<class APawn> Projectile;
+	
 protected:
     virtual void Use() override;
 
     virtual void UseEffects() override;
+
+    virtual void Fire();
 };

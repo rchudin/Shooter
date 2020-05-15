@@ -22,15 +22,18 @@ AWeapon::AWeapon()
 		Mesh->SetWorldLocationAndRotation(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f));
 	}
 
-	MaxAmmo = 30;
+	MaxTotalAmmo = 180;
+	MaxCurrentAmmo = 30;
 	UseRate = 0.5f;
+	UseRange = 1000.f;
 }
 
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	CurrentAmmo = MaxAmmo;
+	CurrentAmmo = MaxCurrentAmmo;
+	TotalAmmo = MaxTotalAmmo;
 }
 
 void AWeapon::Trace(FHitResult& OutHit, FVector& Start, FVector& End) const
@@ -67,11 +70,6 @@ bool AWeapon::CanBeUsed() const
 		return false;
 	}
 
-	if (FireTimerHandle.IsValid() && GetWorldTimerManager().IsTimerActive(FireTimerHandle))
-	{
-		return false;
-	}
-	
 	return true;
 }
 
@@ -80,7 +78,11 @@ bool AWeapon::ServerUse_Validate() { return true; }
 void AWeapon::ServerUse_Implementation()
 {
 	FireTimerExpired = false;
-	Use();
+
+	if (!FireTimerHandle.IsValid() || !GetWorldTimerManager().IsTimerActive(FireTimerHandle))
+	{
+		Use();
+	}
 }
 
 // [Server] StopUse

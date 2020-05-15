@@ -2,6 +2,8 @@
 
 
 #include "FireWeapon.h"
+#include "Math/Rotator.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "../Character/ShooterCharacter.h"
 
 
@@ -11,9 +13,6 @@ void AFireWeapon::Use()
     if (CanBeUsed()) {
 
         UE_LOG(LogTemp, Log, TEXT("%s: Use Weapon"), HasAuthority()?TEXT("Server"):TEXT("Client"));
-        // UE_LOG(LogTemp, Log, TEXT("Text, %d %f %s"), int, float, *string );
-        
-        UE_LOG(LogTemp, Log, TEXT("Use Weapon"));
         
         UWorld* World = GetWorld();
         if (World) {
@@ -24,11 +23,28 @@ void AFireWeapon::Use()
             });
             World->GetTimerManager().SetTimer(FireTimerHandle, TimerCallback, UseRate, false);
 
-            MulticastUseEffects();
+            Fire();
         }
 
     }
 }
+
+void AFireWeapon::Fire()
+{
+    AShooterCharacter* Character = CastChecked<AShooterCharacter>(GetOwner());
+
+    if (Character)
+    {
+        FHitResult OutHit;
+        const FVector ForwardVector = Character->GetBaseAimRotation().RotateVector(FVector(1.f, 0, 0));
+        FVector Start = Character->GetFollowCamera()->GetComponentLocation();
+        FVector End = ((ForwardVector * UseRange) + Start);
+        Trace(OutHit, Start, End);
+        MulticastUseEffects();
+    }
+    
+}
+
 
 void AFireWeapon::UseEffects()
 {
@@ -36,14 +52,26 @@ void AFireWeapon::UseEffects()
     	GetMesh()->PlayAnimation(FireAnimation, false);
     }
 
-    AShooterCharacter* Character = Cast<AShooterCharacter>(GetOwner());
-
-    FHitResult OutHit;
-    FVector Start = Character->GetFollowCamera()->GetComponentLocation();
-    const FVector ForwardVector = Character->GetFollowCamera()->GetForwardVector();
-    FVector End = ((ForwardVector * 1000.f) + Start);
-    
-    DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 3.0f);
-
-    Trace(OutHit, Start, End);
+    AShooterCharacter* Character = CastChecked<AShooterCharacter>(GetOwner());
+    if (Character)
+    {
+        FHitResult OutHit;
+        const FVector ForwardVector = Character->GetBaseAimRotation().RotateVector(FVector(1.f, 0, 0));
+        FVector Start = Character->GetFollowCamera()->GetComponentLocation();;
+        FVector End = ((ForwardVector * UseRange) + Start);
+        Trace(OutHit, Start, End);
+        if (GetMesh())
+        {
+            const FVector NewStart = GetMesh()->GetSocketLocation("skt_muzzle");
+            if (!NewStart.IsZero())
+            {
+                Start = NewStart;
+                if (Projectile)
+                {
+                    FRotator Rotate =  UKismetMathLibrary::FindLookAtRotation(Start, End);
+                }
+            }
+        }
+        DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 3.0f);
+    }
 }

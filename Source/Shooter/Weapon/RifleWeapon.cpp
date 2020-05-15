@@ -18,19 +18,17 @@ void ARifleWeapon::Use()
             FTimerDelegate TimerCallback;
             TimerCallback.BindLambda([this,World]
             {
-                if (FireTimerExpired)
+                if (FireTimerExpired || !CanBeUsed())
                 {
                     World->GetTimerManager().ClearTimer(FireTimerHandle);
                 }else{
-                    MulticastUseEffects();
+                    Fire();
                 }
             });
             
             TimerCallback.Execute();
             
             World->GetTimerManager().SetTimer(FireTimerHandle, TimerCallback, UseRate, true);
-
-            
         }
     }
 }

@@ -25,6 +25,7 @@ class SHOOTER_API AWeapon : public AActor
 	/** The main skeletal mesh*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh",meta = (AllowPrivateAccess = "true"))
 		class USkeletalMeshComponent* Mesh;
+	
 public:	
 	// Sets default values for this actor's properties
 	AWeapon();
@@ -51,13 +52,22 @@ protected:
     virtual void BeginPlay() override;
 	
 	UPROPERTY(EditAnywhere, Category = Stats)
-        unsigned int MaxAmmo;
+        int MaxTotalAmmo;
 
 	UPROPERTY(VisibleAnywhere, Transient, Replicated, Category = Stats)
-        unsigned int CurrentAmmo;
+		int TotalAmmo;
+
+	UPROPERTY(EditAnywhere, Category = Stats)
+		uint16 MaxCurrentAmmo;
+	
+	UPROPERTY(VisibleAnywhere, Transient, Replicated, Category = Stats)
+        uint16 CurrentAmmo;
 
 	UPROPERTY(EditAnywhere, Category = Stats)
 		float UseRate;
+
+	UPROPERTY(EditAnywhere, Category = Stats)
+        float UseRange;
 	
 	virtual void Use() { check(0 && "You must override this"); }
 
