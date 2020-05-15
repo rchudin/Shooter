@@ -11,7 +11,7 @@ ARifleWeapon::ARifleWeapon()
 void ARifleWeapon::Use()
 {
     if (CanBeUsed()) {
-        UE_LOG(LogTemp, Log, TEXT("Use Weapon Rifle"));
+        UE_LOG(LogTemp, Log, TEXT("%s: Use Weapon"), HasAuthority()?TEXT("Server"):TEXT("Client"));
         
         UWorld* World = GetWorld();
         if (World) {

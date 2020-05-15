@@ -134,7 +134,15 @@ void AShooterCharacter::StopFire()
 
 FRotator AShooterCharacter::GetAimRotation(const int BoneCount) const
 {
-	const float RotationPitch = GetControlRotation().Pitch;
+	float RotationPitch;
+	if (GetController())
+	{
+		RotationPitch = GetControlRotation().Pitch;
+	}else
+	{
+		RotationPitch = RemoteViewPitch/(255.f/360.f);
+	}
+	
 	return FRotator(0.0f, 0.0f, (RotationPitch > 180.0f ? 360 - RotationPitch : RotationPitch * -1) / BoneCount);
 }
 
@@ -172,6 +180,10 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AShooterCharacter::OnResetVR);
 }
 
+void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+}
 
 void AShooterCharacter::OnResetVR()
 {

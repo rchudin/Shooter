@@ -9,6 +9,10 @@
 void AFireWeapon::Use()
 {
     if (CanBeUsed()) {
+
+        UE_LOG(LogTemp, Log, TEXT("%s: Use Weapon"), HasAuthority()?TEXT("Server"):TEXT("Client"));
+        // UE_LOG(LogTemp, Log, TEXT("Text, %d %f %s"), int, float, *string );
+        
         UE_LOG(LogTemp, Log, TEXT("Use Weapon"));
         
         UWorld* World = GetWorld();
