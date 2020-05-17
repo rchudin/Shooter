@@ -24,8 +24,15 @@ void UWeaponManager::AttachWeapon() const
 {
 	AShooterCharacter* Character = Cast<AShooterCharacter>(GetOwner());
 	if (Character && CurrentWeapon && (!GetOwner()->HasAuthority() || GetNetMode() == NM_Standalone)) {
-		const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
-		CurrentWeapon->AttachToComponent(Character->GetMesh(), Rules, "skt_weapon");
+		if (Character->GetMesh())
+		{
+			const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
+			CurrentWeapon->AttachToComponent(Character->GetMesh(), Rules, "skt_weapon");
+		}else
+		{
+			const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
+			CurrentWeapon->AttachToComponent(Character->GetCapsuleComponent(), Rules);
+		}
 	}
 }
 

@@ -15,7 +15,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Footprints.h"
-#include "../Weapon/WeaponManager.h"
+#include "Shooter/Weapon/WeaponManager.h"
 #include "ShooterCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -112,6 +112,10 @@ protected:
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
         FRotator GetAimRotation(int BoneCount) const;
+
+	/** Returns IsArmed **/
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+		bool GetIsArmed() const;
 
 public:
 	/** Returns CameraBoom subobject **/

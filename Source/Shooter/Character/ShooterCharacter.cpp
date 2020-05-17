@@ -138,6 +138,15 @@ FRotator AShooterCharacter::GetAimRotation(const int BoneCount) const
 	return FRotator(0.0f, 0.0f, (RotationPitch > 180.0f ? 360 - RotationPitch : RotationPitch * -1) / BoneCount);
 }
 
+bool AShooterCharacter::GetIsArmed() const
+{
+	if (WeaponManager && WeaponManager->GetCurrentWeapon())
+	{
+		return true;
+	}
+	return false;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
