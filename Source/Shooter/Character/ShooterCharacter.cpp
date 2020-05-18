@@ -1,8 +1,7 @@
 // Copyright © 2020 ruslanchudin.com
 
 #include "ShooterCharacter.h"
-
-
+#include "ShooterPlayerController.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -28,7 +27,7 @@ AShooterCharacter::AShooterCharacter()
 	bUseControllerRotationRoll = false;
 
 	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
+	GetCharacterMovement()->bOrientRotationToMovement = false; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
@@ -70,45 +69,33 @@ void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Set HUD player screen
-	UWorld* World = GetWorld();
-	if (PlayerDisplayWidget && World && (!HasAuthority() || GetNetMode() == NM_Standalone))
-	{
-		UUserWidget* WidgetInstance = CreateWidget<UUserWidget>(World, PlayerDisplayWidget);
-		WidgetInstance->AddToPlayerScreen();
-	}
-
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (PlayerController)
-	{
-		PlayerController->PlayerCameraManager->ViewPitchMax = 70.0f;
-		PlayerController->PlayerCameraManager->ViewPitchMin = -80.0f;
-	}
+	SetPlayerDisplayWidget();
 }
 
 void AShooterCharacter::ToggleCamera()
 {
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	ThirdPersonCamera->IsActive() ? ActivateFirstPersonCamera() : ActivateThirdPersonCamera();
+}
 
-	if (ThirdPersonCamera->IsActive())
+void AShooterCharacter::ActivateFirstPersonCamera() const
+{
+	AShooterPlayerController* PlayerController = CastChecked<AShooterPlayerController>(GetController());
+	if (PlayerController)
 	{
 		ThirdPersonCamera->Deactivate();
 		FirstPersonCamera->Activate();
-		if (PlayerController)
-		{
-			PlayerController->PlayerCameraManager->ViewPitchMax = 70.0f;
-			PlayerController->PlayerCameraManager->ViewPitchMin = -80.0f;
-		}
+		PlayerController->SetFirstPersonViewingAngle();
 	}
-	else
+}
+
+void AShooterCharacter::ActivateThirdPersonCamera() const
+{
+	AShooterPlayerController* PlayerController = CastChecked<AShooterPlayerController>(GetController());
+	if (PlayerController)
 	{
 		FirstPersonCamera->Deactivate();
 		ThirdPersonCamera->Activate();
-		if (PlayerController)
-		{
-			PlayerController->PlayerCameraManager->ViewPitchMax = 90.0f;
-			PlayerController->PlayerCameraManager->ViewPitchMin = -90.0f;
-		}
+		PlayerController->SetThirdPersonViewingAngle();
 	}
 }
 
@@ -129,6 +116,16 @@ void AShooterCharacter::StopFire()
 		if (Weapon) {
 			Weapon->ServerStopUse();
 		}
+	}
+}
+
+void AShooterCharacter::SetPlayerDisplayWidget() const
+{
+	UWorld* World = GetWorld();
+	if (PlayerDisplayWidget && World && (!HasAuthority() || GetNetMode() == NM_Standalone))
+	{
+		UUserWidget* NewWidgetInstance = CreateWidget<UUserWidget>(World, PlayerDisplayWidget);
+		NewWidgetInstance->AddToPlayerScreen();
 	}
 }
 

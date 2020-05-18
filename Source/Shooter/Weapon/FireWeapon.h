@@ -21,6 +21,8 @@ class SHOOTER_API AFireWeapon : public AWeapon
     UPROPERTY(EditDefaultsOnly, Category = Animation) 
         class UAnimationAsset* ReloadAnimation;
 public:
+    AFireWeapon();
+    
     /** Projectile class to spawn */
     UPROPERTY(EditDefaultsOnly, Category = Projectile)
         TSubclassOf<class APawn> Projectile;

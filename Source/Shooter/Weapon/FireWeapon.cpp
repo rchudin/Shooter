@@ -2,11 +2,15 @@
 
 
 #include "FireWeapon.h"
+#include "DrawDebugHelpers.h"
 #include "Math/Rotator.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "../Character/ShooterCharacter.h"
 
 
+AFireWeapon::AFireWeapon()
+{
+    UseRange = 10000.f;
+}
 
 void AFireWeapon::Use()
 {
@@ -31,34 +35,24 @@ void AFireWeapon::Use()
 
 void AFireWeapon::Fire()
 {
-    AShooterCharacter* Character = CastChecked<AShooterCharacter>(GetOwner());
-
-    if (Character)
+    FHitResult OutHit;
+    FVector Start;
+    FVector End;
+    if (GetTrajectory(Start, End))
     {
-        FHitResult OutHit;
-        const FVector ForwardVector = Character->GetBaseAimRotation().RotateVector(FVector(1.f, 0, 0));
-        FVector Start = Character->GetFollowCamera()->GetComponentLocation();
-        FVector End = ((ForwardVector * UseRange) + Start);
         Trace(OutHit, Start, End);
         MulticastUseEffects();
     }
-    
 }
 
 
 void AFireWeapon::UseEffects()
 {
-    if (FireAnimation && GetMesh()) {
-    	GetMesh()->PlayAnimation(FireAnimation, false);
-    }
-
-    AShooterCharacter* Character = CastChecked<AShooterCharacter>(GetOwner());
-    if (Character)
+    FHitResult OutHit;
+    FVector Start;
+    FVector End;
+    if (GetTrajectory(Start, End))
     {
-        FHitResult OutHit;
-        const FVector ForwardVector = Character->GetBaseAimRotation().RotateVector(FVector(1.f, 0, 0));
-        FVector Start = Character->GetFollowCamera()->GetComponentLocation();;
-        FVector End = ((ForwardVector * UseRange) + Start);
         Trace(OutHit, Start, End);
         if (GetMesh())
         {
@@ -68,10 +62,14 @@ void AFireWeapon::UseEffects()
                 Start = NewStart;
                 if (Projectile)
                 {
-                    FRotator Rotate =  UKismetMathLibrary::FindLookAtRotation(Start, End);
+                    FRotator Rotate =  UKismetMathLibrary::FindLookAtRotation(Start, OutHit.Location);
                 }
             }
+            if (FireAnimation) {
+                GetMesh()->PlayAnimation(FireAnimation, false);
+            }
         }
-        DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 3.0f);
+        
+        DrawDebugFireLine(OutHit, Start, End);
     }
 }

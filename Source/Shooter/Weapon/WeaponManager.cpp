@@ -22,7 +22,7 @@ void UWeaponManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 void UWeaponManager::AttachWeapon() const
 {
-	AShooterCharacter* Character = Cast<AShooterCharacter>(GetOwner());
+	AShooterCharacter* Character = CastChecked<AShooterCharacter>(GetOwner());
 	if (Character && CurrentWeapon && (!GetOwner()->HasAuthority() || GetNetMode() == NM_Standalone)) {
 		if (Character->GetMesh())
 		{
@@ -31,16 +31,17 @@ void UWeaponManager::AttachWeapon() const
 		}else
 		{
 			const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
-			CurrentWeapon->AttachToComponent(Character->GetCapsuleComponent(), Rules);
+			CurrentWeapon->AttachToComponent(Character->GetRootComponent(), Rules);
 		}
 	}
 }
 
 void UWeaponManager::TakeWeapon(AWeapon* Weapon)
 {
-	AShooterCharacter* Character = Cast<AShooterCharacter>(GetOwner());
+	AShooterCharacter* Character = CastChecked<AShooterCharacter>(GetOwner());
 	if (GetOwner()->HasAuthority() && Weapon && Character) {
 		Weapon->SetOwner(Character);
+		Weapon->SetInstigator(Character);
 		CurrentWeapon = Weapon;
 		if (GetNetMode() == NM_Standalone) {
 			AttachWeapon();

@@ -1,7 +1,7 @@
 // Copyright © 2020 ruslanchudin.com
 
 #include "Weapon.h"
-
+#include "Shooter/Character/ShooterCharacter.h"
 
 
 // Sets default values
@@ -42,6 +42,8 @@ void AWeapon::Trace(FHitResult& OutHit, FVector& Start, FVector& End) const
 
 	FCollisionQueryParams TraceParams(FName(TEXT("Fire trace")));
 	TraceParams.bReturnPhysicalMaterial = true;
+	TraceParams.AddIgnoredActor(this);
+	TraceParams.AddIgnoredActor(GetInstigator());
 
 	UWorld* World = GetWorld();
 	if (World)
@@ -50,11 +52,49 @@ void AWeapon::Trace(FHitResult& OutHit, FVector& Start, FVector& End) const
 	}
 }
 
+bool AWeapon::GetTrajectory(FVector& Start, FVector& End) const
+{
+	AShooterCharacter* Character = CastChecked<AShooterCharacter>(GetInstigator());
+	if (Character)
+	{
+		FVector ForwardVector;
+		if (Character->GetController())
+		{
+			ForwardVector = Character->GetFollowCamera()->GetForwardVector();
+		}else
+		{
+			ForwardVector = Character->GetBaseAimRotation().RotateVector(FVector(1.f,0.f,0.f));
+		}
+		
+		Start = Character->GetFollowCamera()->GetComponentLocation();
+		End = ((ForwardVector * UseRange) + Start);
+
+		return true;
+	}
+	return false;
+}
+
+void AWeapon::DrawDebugFireLine(FHitResult& OutHit, FVector& Start, FVector& End) const 
+{
+	
+	UE_LOG(LogTemp, Log, TEXT("%s: Fire Start(x:%f, y:%f , z:%f)"), HasAuthority()?TEXT("Server"):TEXT("Client"), Start.X, Start.Y, Start.Z);
+	UE_LOG(LogTemp, Log, TEXT("%s: Fire End(x:%f, y:%f , z:%f)"), HasAuthority()?TEXT("Server"):TEXT("Client"), End.X, End.Y, End.Z);
+        
+	if (!OutHit.Location.IsZero())
+	{
+		End = OutHit.Location;
+	}
+        
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 3.0f);
+	DrawDebugSphere(GetWorld(), End, 10.f, 8, FColor::Red, false, 3.0f);
+}
+
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AWeapon, CurrentAmmo);
+	DOREPLIFETIME_CONDITION(AWeapon, TotalAmmo, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AWeapon, CurrentAmmo, COND_OwnerOnly);
 }
 
 void AWeapon::MulticastUseEffects_Implementation()

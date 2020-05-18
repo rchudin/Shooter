@@ -105,10 +105,17 @@ protected:
 	/** Camera change from first person or third person */
 	void ToggleCamera();
 
+	void ActivateFirstPersonCamera() const;
+
+	void ActivateThirdPersonCamera() const;
+
 	/** Function that handles firing */
 	void Fire();
 
 	void StopFire();
+
+	/*Set HUD player screen*/
+	void SetPlayerDisplayWidget() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
         FRotator GetAimRotation(int BoneCount) const;

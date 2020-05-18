@@ -4,9 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "UObject/Class.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Animation/AnimationAsset.h"
 #include "Net/UnrealNetwork.h"
 #include "Weapon.generated.h"
 
@@ -74,6 +72,10 @@ protected:
 	virtual void UseEffects() { check(0 && "You must override this"); }
 
 	void Trace(FHitResult& OutHit, FVector& Start, FVector& End) const;
+
+	bool GetTrajectory(FVector& Start, FVector& End) const;
+
+	void DrawDebugFireLine(FHitResult& OutHit, FVector& Start, FVector& End) const;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
