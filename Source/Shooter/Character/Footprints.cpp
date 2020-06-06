@@ -43,7 +43,7 @@ void UFootprints::FootDown(const UArrowComponent* FootArrow) const
 			ADecalActor* Decal = GetWorld()->SpawnActor<ADecalActor>(ADecalActor::StaticClass(), HitResult.Location, Rotation);
 			Decal->SetDecalMaterial(DecalMaterial);
 			Decal->SetActorScale3D(FVector(0.1f, 0.1f, 0.1f));
-			Decal->InitialLifeSpan = 3.0f;
+			Decal->SetLifeSpan(5.0f);
 		}
 
 		if (ParticleFX) {

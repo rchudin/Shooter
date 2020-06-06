@@ -54,7 +54,7 @@ void AWeapon::Trace(FHitResult& OutHit, FVector& Start, FVector& End) const
 
 bool AWeapon::GetTrajectory(FVector& Start, FVector& End) const
 {
-	AShooterCharacter* Character = CastChecked<AShooterCharacter>(GetInstigator());
+	AShooterCharacter* Character = Cast<AShooterCharacter>(GetInstigator());
 	if (Character)
 	{
 		FVector ForwardVector;
