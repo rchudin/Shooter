@@ -114,6 +114,12 @@ protected:
 
 	void StopFire();
 
+	/* Start Crouch */
+	void StartCrouch();
+	/* Stop Crouch*/
+	void StopCrouch();
+	
+
 	/*Set HUD player screen*/
 	void SetPlayerDisplayWidget() const;
 	
