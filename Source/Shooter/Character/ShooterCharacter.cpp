@@ -1,6 +1,9 @@
 // Copyright © 2020 ruslanchudin.com
 
+
 #include "ShooterCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "HeadMountedDisplayFunctionLibrary.h"
 #include "ShooterPlayerController.h"
 
 
@@ -146,7 +149,15 @@ void AShooterCharacter::SetPlayerDisplayWidget() const
 
 FRotator AShooterCharacter::GetAimRotation(const int BoneCount) const
 {
-	const float RotationPitch = GetBaseAimRotation().Pitch;
+	float RotationPitch;
+	if (GetController())
+	{
+		RotationPitch= GetControlRotation().Pitch;
+	}else
+	{
+		RotationPitch = GetBaseAimRotation().Pitch;
+	}
+
 	return FRotator(0.0f, 0.0f, (RotationPitch > 180.0f ? 360 - RotationPitch : RotationPitch * -1) / BoneCount);
 }
 

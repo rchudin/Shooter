@@ -40,6 +40,7 @@ void AFireWeapon::Fire()
     FVector End;
     if (GetTrajectory(Start, End))
     {
+        CurrentAmmo --;
         Trace(OutHit, Start, End);
         MulticastUseEffects();
     }

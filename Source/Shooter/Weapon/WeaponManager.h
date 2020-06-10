@@ -4,9 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include"../Character/ShooterCharacter.h"
+#include "Shooter//Character/ShooterCharacter.h"
 #include "Weapon.h"
-#include "Net/UnrealNetwork.h"
 #include "WeaponManager.generated.h"
 
 
@@ -40,6 +39,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		void TakeWeapon(AWeapon* Weapon);
+	
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+		AWeapon* CreateWeapon(UClass* WeaponClass);
 
 	/** Returns CurrentWeapon subobject **/
     FORCEINLINE class AWeapon* GetCurrentWeapon() const { return CurrentWeapon; }

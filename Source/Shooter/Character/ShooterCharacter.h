@@ -3,15 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
-#include "Components/SkeletalMeshComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "Components/InputComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Footprints.h"
@@ -131,15 +126,17 @@ protected:
 		bool GetIsArmed() const;
 
 public:
-	/** Returns CameraBoom subobject **/
+	/** Returns CameraBoom sub object **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	/** Returns FollowCamera subobject **/
+	/** Returns FollowCamera sub object **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FirstPersonCamera->IsActive() ? FirstPersonCamera : ThirdPersonCamera; }
-	/** Returns RightFootArrow subobject **/
+	/** Returns Footprint sub object **/
+	FORCEINLINE class UFootprints* GetFootprint() const { return Footprint; }
+	/** Returns RightFootArrow sub object **/
 	FORCEINLINE class UArrowComponent* GetRightFootArrow() const { return RightFootArrow; }
-	/** Returns LeftFootArrow subobject **/
+	/** Returns LeftFootArrow sub object **/
 	FORCEINLINE class UArrowComponent* GetLeftFootArrow() const { return LeftFootArrow; }
-	/** Returns WeaponManager subobject **/
+	/** Returns WeaponManager sub object **/
 	FORCEINLINE class UWeaponManager* GetWeaponManager() const { return WeaponManager; }
 };
 
