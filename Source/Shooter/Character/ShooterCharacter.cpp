@@ -65,6 +65,10 @@ AShooterCharacter::AShooterCharacter()
 
 	// Weapon Manager
 	WeaponManager = CreateDefaultSubobject<UWeaponManager>(TEXT("WeaponManager"));
+	WeaponManager->AttachWeapon =([&](AActor* Actor)
+	{
+		AttachWeapon(Actor);
+	});
 }
 
 // Called when the game starts or when spawned
@@ -76,11 +80,6 @@ void AShooterCharacter::BeginPlay()
 void AShooterCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	
-	AShooterPlayerController* PlayerController = Cast<AShooterPlayerController>(NewController);
-
-	SetupUpdateAmmoWidget(PlayerController);
-
 }
 
 void AShooterCharacter::ActivateFirstPersonCamera() const
@@ -154,15 +153,6 @@ FRotator AShooterCharacter::GetAimRotation(const int BoneCount) const
 	return FRotator(0.0f, 0.0f, (RotationPitch > 180.0f ? 360 - RotationPitch : RotationPitch * -1) / BoneCount);
 }
 
-bool AShooterCharacter::GetIsArmed() const
-{
-	if (WeaponManager && WeaponManager->GetCurrentWeapon())
-	{
-		return true;
-	}
-	return false;
-}
-
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -205,22 +195,19 @@ void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }
 
-void AShooterCharacter::SetupUpdateAmmoWidget(AShooterPlayerController* PlayerController)
+void AShooterCharacter::AttachWeapon(AActor* Actor)
 {
-	if (PlayerController)
+	const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
+	if (GetMesh())
 	{
-		AInGameHud* Hud = Cast<AInGameHud>(PlayerController->GetHUD());
-		WeaponManager->SetUpdateCurrentAmmoFunction([Hud](const int& Count)
-        {
-            Hud->UpdateCurrentAmmo(Count);
-        });
-		WeaponManager->SetUpdateTotalAmmoFunction([Hud](const int& Count)
-        {
-            Hud->UpdateTotalAmmo(Count);
-        });
+		Actor->AttachToComponent(GetMesh(), Rules, "skt_weapon");
 	}
-	
+	else
+	{
+		Actor->AttachToComponent(GetRootComponent(), Rules);
+	}
 }
+
 
 void AShooterCharacter::OnResetVR()
 {

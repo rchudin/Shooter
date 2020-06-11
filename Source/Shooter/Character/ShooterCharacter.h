@@ -69,7 +69,7 @@ protected:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	virtual void SetupUpdateAmmoWidget(AShooterPlayerController* PlayerController);
+	virtual void AttachWeapon(AActor* Actor);
 	
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
@@ -121,7 +121,7 @@ protected:
 
 	/** Returns IsArmed **/
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-		bool GetIsArmed() const;
+		bool GetIsArmed() const {return WeaponManager && WeaponManager->GetCurrentWeapon() ? true : false; };
 
 public:
 	/** Returns CameraBoom sub object **/
@@ -137,4 +137,3 @@ public:
 	/** Returns WeaponManager sub object **/
 	FORCEINLINE class UWeaponManager* GetWeaponManager() const { return WeaponManager; }
 };
-

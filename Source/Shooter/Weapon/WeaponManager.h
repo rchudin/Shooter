@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Shooter//Character/ShooterCharacter.h"
 #include "Weapon.h"
+#include "Shooter/UI/InGameHud.h"
+
 #include "WeaponManager.generated.h"
 
 
@@ -23,27 +24,19 @@ private:
 	UPROPERTY(replicated)
 		class AWeapon* SecondaryWeapon;
 
-	UFUNCTION()
-		void AttachWeapon() const;
-
 	/** Called when the CurrentWeapon variable gets updated */
 	UFUNCTION()
-		void OnRep_CurrentWeapon() const { AttachWeapon(); }
+		void OnRep_CurrentWeapon() const;
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	TFunction<void(const int&)> UpdateCurrentAmmo;
-	
-	TFunction<void(const int&)> UpdateTotalAmmo;
 
 public:	
 	// Sets default values for this component's properties
 	UWeaponManager();
 
-	void SetUpdateCurrentAmmoFunction(const TFunction<void(const int&)> Fn){ UpdateCurrentAmmo = Fn;}
-	
-	void SetUpdateTotalAmmoFunction(const TFunction<void(const int&)> Fn){ UpdateTotalAmmo = Fn;}
+	TFunction<void(AActor*)> AttachWeapon;
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		void TakeWeapon(AWeapon* Weapon);

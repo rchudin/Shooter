@@ -31,18 +31,18 @@ AWeapon* UWeaponManager::CreateWeapon(UClass* WeaponClass)
 		return  nullptr;
 	}
 	
-	AShooterCharacter* Character = Cast<AShooterCharacter>(GetOwner());
-	if (!Character)
+	AActor* Owner = GetOwner();
+	if (!Owner)
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s: %s - CANT FIND CHARACTER OWNER"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
+		UE_LOG(LogTemp, Error, TEXT("%s: %s - CANT FIND OWNER"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
 		return nullptr;
 	}
 	
 	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = Character;
+	SpawnParams.Owner = Owner;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	const FVector Location =  Character->GetCapsuleComponent()->GetComponentLocation();
-	const FRotator Rotation = Character->GetCapsuleComponent()->GetComponentRotation();
+	const FVector Location =  Owner->GetActorLocation();
+	const FRotator Rotation = Owner->GetActorRotation();
 
 	auto World = GetWorld();
 	AWeapon* Weapon = nullptr;
@@ -54,32 +54,41 @@ AWeapon* UWeaponManager::CreateWeapon(UClass* WeaponClass)
 	return  Weapon;
 }
 
-void UWeaponManager::AttachWeapon() const
+void UWeaponManager::OnRep_CurrentWeapon() const
 {
-	AShooterCharacter* Character = CastChecked<AShooterCharacter>(GetOwner());
-	if (Character && CurrentWeapon && (!GetOwner()->HasAuthority() || GetNetMode() == NM_Standalone)) {
-		if (Character->GetMesh())
-		{
-			const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
-			CurrentWeapon->AttachToComponent(Character->GetMesh(), Rules, "skt_weapon");
-		}else
-		{
-			const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
-			CurrentWeapon->AttachToComponent(Character->GetRootComponent(), Rules);
-		}
+	APawn* Pawn =  Cast<APawn>(GetOwner());
+	CurrentWeapon->SetInstigator(Pawn);
+	AController* PlayerController = Pawn->GetController();
+	if (PlayerController)
+	{
+		CurrentWeapon->SetOwner(Pawn->GetController());
+	}
+	else
+	{
+		CurrentWeapon->SetOwner(GetOwner());
+	}
+	
+	if (AttachWeapon)
+	{
+		AttachWeapon(CurrentWeapon);
+	}
+	else
+	{
+		const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
+		CurrentWeapon->AttachToComponent(GetOwner()->GetRootComponent(), Rules);
 	}
 }
+
 
 void UWeaponManager::TakeWeapon(AWeapon* Weapon)
 {
 	UE_LOG(LogTemp, Log, TEXT("%s: %s"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-	AShooterCharacter* Character = CastChecked<AShooterCharacter>(GetOwner());
-	if (GetOwner()->HasAuthority() && Weapon && Character) {
-		Weapon->SetOwner(Character);
-		Weapon->SetInstigator(Character);
+	
+	if (GetOwner()->HasAuthority() && Weapon)
+	{
 		CurrentWeapon = Weapon;
 		if (GetNetMode() == NM_Standalone) {
-			AttachWeapon();
+			OnRep_CurrentWeapon();
 		}
 	}
 }
