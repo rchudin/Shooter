@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Shooter/UI/InGameHud.h"
+
 #include "Weapon.generated.h"
 
 UENUM()
@@ -23,7 +25,22 @@ class SHOOTER_API AWeapon : public AActor
 	/** The main skeletal mesh*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh",meta = (AllowPrivateAccess = "true"))
 		class USkeletalMeshComponent* Mesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Display", meta = (AllowPrivateAccess = "true"))
+        AInGameHud* InGameHud;
+
+	UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_CurrentAmmo, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+        int CurrentAmmo;
 	
+	UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_TotalAmmo, Category = "Stats",  meta = (AllowPrivateAccess = "true"))
+		int TotalAmmo;
+
+	UFUNCTION()
+		void OnRep_CurrentAmmo();
+	
+	UFUNCTION()
+		void OnRep_TotalAmmo();
+
 public:	
 	// Sets default values for this actor's properties
 	AWeapon();
@@ -41,31 +58,31 @@ public:
 	bool CanBeUsed() const;
 
 protected:
-	FTimerHandle FireTimerHandle;
-
-	//use toggle switch
-	bool FireTimerExpired;
-
 	// Called when the game starts or when spawned
     virtual void BeginPlay() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	FTimerHandle FireTimerHandle;
+	
+	//use toggle switch
+	bool FireTimerExpired;
 	
 	UPROPERTY(EditAnywhere, Category = Stats)
         int MaxTotalAmmo;
 
-	UPROPERTY(VisibleAnywhere, Transient, Replicated, Category = Stats)
-		int TotalAmmo;
-
 	UPROPERTY(EditAnywhere, Category = Stats)
-		uint16 MaxCurrentAmmo;
-	
-	UPROPERTY(VisibleAnywhere, Transient, Replicated, Category = Stats)
-        uint16 CurrentAmmo;
+		int MaxCurrentAmmo;
 
 	UPROPERTY(EditAnywhere, Category = Stats)
 		float UseRate;
 
 	UPROPERTY(EditAnywhere, Category = Stats)
         float UseRange;
+
+	void AddCurrentAmmo(const int& Count);
+	
+	void AddTotalAmmo(const int& Count);
 	
 	virtual void Use() { check(0 && "You must override this"); }
 
@@ -77,12 +94,29 @@ protected:
 
 	void DrawDebugFireLine(FHitResult& OutHit, FVector& Start, FVector& End) const;
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	void UpdateHudCurrentAmmo();
+
+	void UpdateHudTotalAmmo();
 
 	UFUNCTION(Reliable, NetMulticast)
 		void MulticastUseEffects();
 	
-public:	
-	/** Returns Mesh subobject **/
+public:
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+		void UpdateHud();
+	
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+		virtual void ResetWeapon();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon stats")
+		void ResetAmmo();
+	
+	UFUNCTION(BlueprintCallable, Category = "Weapon stats")
+		 int GetCurrentAmmo() const { return CurrentAmmo; }
+		 
+	UFUNCTION(BlueprintCallable, Category = "Weapon stats")
+		 int GetTotalAmmo() const { return TotalAmmo; }
+	
+	/** Returns Mesh sub object **/
 	FORCEINLINE class USkeletalMeshComponent* GetMesh() const { return Mesh; }
 };

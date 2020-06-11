@@ -32,5 +32,5 @@ protected:
 
     virtual void UseEffects() override;
 
-    virtual void Fire();
+    void Fire();
 };

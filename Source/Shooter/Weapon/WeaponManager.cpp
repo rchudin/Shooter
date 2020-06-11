@@ -3,7 +3,7 @@
 
 #include "WeaponManager.h"
 
-
+#include "Shooter/Character/ShooterPlayerController.h"
 
 
 // Sets default values for this component's properties
@@ -56,26 +56,18 @@ AWeapon* UWeaponManager::CreateWeapon(UClass* WeaponClass)
 
 void UWeaponManager::OnRep_CurrentWeapon() const
 {
-	APawn* Pawn =  Cast<APawn>(GetOwner());
-	CurrentWeapon->SetInstigator(Pawn);
-	AController* PlayerController = Pawn->GetController();
-	if (PlayerController)
+	if (CurrentWeapon)
 	{
-		CurrentWeapon->SetOwner(Pawn->GetController());
-	}
-	else
-	{
-		CurrentWeapon->SetOwner(GetOwner());
-	}
-	
-	if (AttachWeapon)
-	{
-		AttachWeapon(CurrentWeapon);
-	}
-	else
-	{
-		const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
-		CurrentWeapon->AttachToComponent(GetOwner()->GetRootComponent(), Rules);
+		if (AttachWeapon)
+		{
+			AttachWeapon(CurrentWeapon);
+		}
+		else
+		{
+			const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
+			CurrentWeapon->AttachToComponent(GetOwner()->GetRootComponent(), Rules);
+		}
+		CurrentWeapon->UpdateHud();
 	}
 }
 
@@ -86,7 +78,19 @@ void UWeaponManager::TakeWeapon(AWeapon* Weapon)
 	
 	if (GetOwner()->HasAuthority() && Weapon)
 	{
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->ResetWeapon();
+		}
 		CurrentWeapon = Weapon;
+		APawn* Pawn =  Cast<APawn>(GetOwner());
+		CurrentWeapon->SetInstigator(Pawn);
+		if (Pawn)
+		{
+			AController* PlayerController = Pawn->GetController();
+			PlayerController ? CurrentWeapon->SetOwner(Pawn->GetController()) : CurrentWeapon->SetOwner(GetOwner());
+		}
+		
 		if (GetNetMode() == NM_Standalone) {
 			OnRep_CurrentWeapon();
 		}

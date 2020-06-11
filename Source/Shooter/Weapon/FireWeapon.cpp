@@ -3,6 +3,7 @@
 
 #include "FireWeapon.h"
 #include "DrawDebugHelpers.h"
+#include "GameModeInfoCustomizer.h"
 #include "Math/Rotator.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -40,7 +41,7 @@ void AFireWeapon::Fire()
     FVector End;
     if (GetTrajectory(Start, End))
     {
-        CurrentAmmo --;
+        AddCurrentAmmo(-1);
         Trace(OutHit, Start, End);
         MulticastUseEffects();
     }

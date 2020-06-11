@@ -80,6 +80,8 @@ void AShooterCharacter::BeginPlay()
 void AShooterCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
+	UE_LOG(LogTemp, Warning, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
 }
 
 void AShooterCharacter::ActivateFirstPersonCamera() const

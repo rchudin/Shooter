@@ -15,10 +15,11 @@ UCLASS()
 class SHOOTER_API UAmmoWidget : public UUserWidget
 {
 	GENERATED_BODY()
+	
+protected:
+	virtual void NativeConstruct() override;
 public:
 	UAmmoWidget(const FObjectInitializer& ObjectInitializer);
-
-	virtual void NativeConstruct() override;
 	
 	void UpdateCurrentAmmo(const int& Count) const;
 	
