@@ -3,7 +3,8 @@
 !/Content/Shooter
 
 #Rider
-*h~
+Source/**/*.h~
+Source/**/*.cpp~
 
 # Visual Studio Code
 .vscode/

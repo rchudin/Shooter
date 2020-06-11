@@ -4,7 +4,6 @@
 #include "ShooterCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
-#include "ShooterPlayerController.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -72,18 +71,21 @@ AShooterCharacter::AShooterCharacter()
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	SetPlayerDisplayWidget();
 }
 
-void AShooterCharacter::ToggleCamera()
+void AShooterCharacter::PossessedBy(AController* NewController)
 {
-	ThirdPersonCamera->IsActive() ? ActivateFirstPersonCamera() : ActivateThirdPersonCamera();
+	Super::PossessedBy(NewController);
+	
+	AShooterPlayerController* PlayerController = Cast<AShooterPlayerController>(NewController);
+
+	SetupUpdateAmmoWidget(PlayerController);
+
 }
 
 void AShooterCharacter::ActivateFirstPersonCamera() const
 {
-	AShooterPlayerController* PlayerController = CastChecked<AShooterPlayerController>(GetController());
+	AShooterPlayerController* PlayerController = Cast<AShooterPlayerController>(GetController());
 	if (PlayerController)
 	{
 		ThirdPersonCamera->Deactivate();
@@ -94,7 +96,7 @@ void AShooterCharacter::ActivateFirstPersonCamera() const
 
 void AShooterCharacter::ActivateThirdPersonCamera() const
 {
-	AShooterPlayerController* PlayerController = CastChecked<AShooterPlayerController>(GetController());
+	AShooterPlayerController* PlayerController = Cast<AShooterPlayerController>(GetController());
 	if (PlayerController)
 	{
 		FirstPersonCamera->Deactivate();
@@ -137,15 +139,6 @@ void AShooterCharacter::StopCrouch()
 	UnCrouch();
 }
 
-void AShooterCharacter::SetPlayerDisplayWidget() const
-{
-	UWorld* World = GetWorld();
-	if (PlayerDisplayWidget && World && (!HasAuthority() || GetNetMode() == NM_Standalone))
-	{
-		UUserWidget* NewWidgetInstance = CreateWidget<UUserWidget>(World, PlayerDisplayWidget);
-		NewWidgetInstance->AddToPlayerScreen();
-	}
-}
 
 FRotator AShooterCharacter::GetAimRotation(const int BoneCount) const
 {
@@ -210,6 +203,23 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+}
+
+void AShooterCharacter::SetupUpdateAmmoWidget(AShooterPlayerController* PlayerController)
+{
+	if (PlayerController)
+	{
+		AInGameHud* Hud = Cast<AInGameHud>(PlayerController->GetHUD());
+		WeaponManager->SetUpdateCurrentAmmoFunction([Hud](const int& Count)
+        {
+            Hud->UpdateCurrentAmmo(Count);
+        });
+		WeaponManager->SetUpdateTotalAmmoFunction([Hud](const int& Count)
+        {
+            Hud->UpdateTotalAmmo(Count);
+        });
+	}
+	
 }
 
 void AShooterCharacter::OnResetVR()

@@ -8,8 +8,9 @@
 #include "Components/ArrowComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Blueprint/UserWidget.h"
 #include "Footprints.h"
+#include "ShooterPlayerController.h"
+#include "Shooter/UI/InGameHud.h"
 #include "Shooter/Weapon/WeaponManager.h"
 #include "ShooterCharacter.generated.h"
 
@@ -30,10 +31,6 @@ private:
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* ThirdPersonCamera;
-
-	/**HUD*/
-	UPROPERTY(EditAnywhere, Category = "HUD", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> PlayerDisplayWidget;
 
 	/** Footprint */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
@@ -65,10 +62,14 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	virtual void PossessedBy(AController * NewController) override;
+
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void SetupUpdateAmmoWidget(AShooterPlayerController* PlayerController);
 	
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
@@ -98,7 +99,7 @@ protected:
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 
 	/** Camera change from first person or third person */
-	void ToggleCamera();
+	void ToggleCamera() {ThirdPersonCamera->IsActive() ? ActivateFirstPersonCamera() : ActivateThirdPersonCamera();}
 
 	void ActivateFirstPersonCamera() const;
 
@@ -108,15 +109,12 @@ protected:
 	void Fire();
 
 	void StopFire();
-
+	
 	/* Start Crouch */
 	void StartCrouch();
+	
 	/* Stop Crouch*/
 	void StopCrouch();
-	
-
-	/*Set HUD player screen*/
-	void SetPlayerDisplayWidget() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
         FRotator GetAimRotation(int BoneCount) const;

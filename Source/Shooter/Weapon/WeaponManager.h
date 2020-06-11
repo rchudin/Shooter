@@ -33,10 +33,18 @@ private:
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	TFunction<void(const int&)> UpdateCurrentAmmo;
+	
+	TFunction<void(const int&)> UpdateTotalAmmo;
+
 public:	
 	// Sets default values for this component's properties
 	UWeaponManager();
 
+	void SetUpdateCurrentAmmoFunction(const TFunction<void(const int&)> Fn){ UpdateCurrentAmmo = Fn;}
+	
+	void SetUpdateTotalAmmoFunction(const TFunction<void(const int&)> Fn){ UpdateTotalAmmo = Fn;}
+	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		void TakeWeapon(AWeapon* Weapon);
 	
