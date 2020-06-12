@@ -3,7 +3,7 @@
 
 #include "WeaponManager.h"
 
-#include "Shooter/Character/ShooterPlayerController.h"
+
 
 
 // Sets default values for this component's properties
@@ -25,12 +25,13 @@ void UWeaponManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 void UWeaponManager::UseWeapon() const
 {
-	CurrentWeapon->ServerUse();
+	if (CurrentWeapon) CurrentWeapon->ServerUse();
+	
 }
 
 void UWeaponManager::StopUseWeapon() const
 {
-	CurrentWeapon->ServerStopUse();
+	if (CurrentWeapon) CurrentWeapon->ServerStopUse();
 }
 
 

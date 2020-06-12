@@ -2,7 +2,8 @@
 
 #include "ShooterGameMode.h"
 #include "GameFramework/HUD.h"
-#include "Character/ShooterPlayerController.h"
+#include "ShooterPlayerController.h"
+#include "ShooterPlayerState.h"
 #include "UObject/ConstructorHelpers.h"
 
 AShooterGameMode::AShooterGameMode()
@@ -13,11 +14,13 @@ AShooterGameMode::AShooterGameMode()
 	if (PlayerPawnBPClass.Class)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
-		PlayerControllerClass = AShooterPlayerController::StaticClass();
 	}
 	
 	if (HudBPClass.Class)
 	{
 		HUDClass = HudBPClass.Class;
 	}
+
+	PlayerControllerClass = AShooterPlayerController::StaticClass();
+	PlayerStateClass = AShooterPlayerState::StaticClass();
 }

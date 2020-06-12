@@ -9,7 +9,6 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Footprints.h"
-#include "ShooterPlayerController.h"
 #include "Shooter/UI/InGameHud.h"
 #include "Shooter/Weapon/WeaponManager.h"
 #include "ShooterCharacter.generated.h"

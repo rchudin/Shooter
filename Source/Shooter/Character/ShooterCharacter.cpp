@@ -4,7 +4,8 @@
 #include "ShooterCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
-#include "Shooter/ShooterGameInstance.h"
+#include "Shooter/ShooterPlayerController.h"
+#include "Shooter/ShooterPlayerState.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -87,27 +88,19 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 	
 	
 	/* TEMPORARY */
-
-	if (WeaponManager && HasAuthority())
+	if (HasAuthority())
 	{
-        const UShooterGameInstance* GameInstance = Cast<UShooterGameInstance>(GetGameInstance());
-        if (GameInstance)
-        {
-            const UDataTable* WeaponInstanceData = GameInstance->GetWeaponInstanceData();
-            if (WeaponInstanceData)
-            {
-                static const FString ContextString(TEXT("Weapon Instance"));
-                FWeaponInstance* WeaponInstance = WeaponInstanceData->FindRow<FWeaponInstance>(FName(TEXT("M16")), ContextString, true);
-                if (WeaponInstance)
-                {
-                    AWeapon* NewWeapon = WeaponManager->CreateWeapon(WeaponInstance->Weapon);
-                	if (NewWeapon) WeaponManager->TakeWeapon(NewWeapon);
-                }
-            }
-        }
-    }			
-    
-	
+		const AShooterPlayerState* PState = NewController->GetPlayerState<AShooterPlayerState>();
+		if (PState)
+		{
+			const FWeaponInstance* WeaponInstance = PState->GetDefaultMainWeapon();
+			if (WeaponInstance)
+			{
+				AWeapon* NewWeapon = WeaponManager->CreateWeapon(WeaponInstance->Weapon);
+				if (NewWeapon) WeaponManager->TakeWeapon(NewWeapon);
+			}
+		}
+	}
 	/* TEMPORARY */
 }
 
