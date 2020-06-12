@@ -23,13 +23,24 @@ void UWeaponManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME_CONDITION(UWeaponManager, SecondaryWeapon, COND_OwnerOnly);
 }
 
-AWeapon* UWeaponManager::CreateWeapon(UClass* WeaponClass)
+void UWeaponManager::UseWeapon() const
 {
-	if (!WeaponClass->IsChildOf(AWeapon::StaticClass()))
+	CurrentWeapon->ServerUse();
+}
+
+void UWeaponManager::StopUseWeapon() const
+{
+	CurrentWeapon->ServerStopUse();
+}
+
+
+AWeapon* UWeaponManager::CreateWeapon(const TSubclassOf<AWeapon>& WeaponClass)
+{
+	/*if (!WeaponClass->IsChildOf(AWeapon::StaticClass()))
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s: %s - WEAPON CLASS NOT WEAPON"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
 		return  nullptr;
-	}
+	}*/
 	
 	AActor* Owner = GetOwner();
 	if (!Owner)

@@ -4,6 +4,7 @@
 #include "ShooterCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Shooter/ShooterGameInstance.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -82,6 +83,32 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	UE_LOG(LogTemp, Warning, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
+
+	
+	
+	/* TEMPORARY */
+
+	if (WeaponManager && HasAuthority())
+	{
+        const UShooterGameInstance* GameInstance = Cast<UShooterGameInstance>(GetGameInstance());
+        if (GameInstance)
+        {
+            const UDataTable* WeaponInstanceData = GameInstance->GetWeaponInstanceData();
+            if (WeaponInstanceData)
+            {
+                static const FString ContextString(TEXT("Weapon Instance"));
+                FWeaponInstance* WeaponInstance = WeaponInstanceData->FindRow<FWeaponInstance>(FName(TEXT("M16")), ContextString, true);
+                if (WeaponInstance)
+                {
+                    AWeapon* NewWeapon = WeaponManager->CreateWeapon(WeaponInstance->Weapon);
+                	if (NewWeapon) WeaponManager->TakeWeapon(NewWeapon);
+                }
+            }
+        }
+    }			
+    
+	
+	/* TEMPORARY */
 }
 
 void AShooterCharacter::ActivateFirstPersonCamera() const
@@ -106,25 +133,6 @@ void AShooterCharacter::ActivateThirdPersonCamera() const
 	}
 }
 
-void AShooterCharacter::Fire()
-{
-	if (WeaponManager) {
-		AWeapon* Weapon = WeaponManager->GetCurrentWeapon();
-		if (Weapon) {
-			Weapon->ServerUse();
-		}
-	}
-}
-
-void AShooterCharacter::StopFire()
-{
-	if (WeaponManager) {
-		AWeapon* Weapon = WeaponManager->GetCurrentWeapon();
-		if (Weapon) {
-			Weapon->ServerStopUse();
-		}
-	}
-}
 
 void AShooterCharacter::StartCrouch()
 {

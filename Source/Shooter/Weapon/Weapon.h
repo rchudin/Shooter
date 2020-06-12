@@ -7,7 +7,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Shooter/UI/InGameHud.h"
-
+#include "Engine/DataTable.h"
 #include "Weapon.generated.h"
 
 UENUM()
@@ -28,6 +28,9 @@ class SHOOTER_API AWeapon : public AActor
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Display", meta = (AllowPrivateAccess = "true"))
         AInGameHud* InGameHud;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+		TEnumAsByte<EWeaponType> Type;
 
 	UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_CurrentAmmo, Category = "Stats", meta = (AllowPrivateAccess = "true"))
         int CurrentAmmo;
@@ -119,4 +122,16 @@ public:
 	
 	/** Returns Mesh sub object **/
 	FORCEINLINE class USkeletalMeshComponent* GetMesh() const { return Mesh; }
+	
+	/** Returns Type sub object **/
+	FORCEINLINE TEnumAsByte<EWeaponType> GetType() const { return Type; }
+};
+
+USTRUCT(BlueprintType)
+struct FWeaponInstance : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TSubclassOf<AWeapon> Weapon;
 };

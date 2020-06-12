@@ -36,13 +36,17 @@ public:
 	// Sets default values for this component's properties
 	UWeaponManager();
 
+	void UseWeapon() const;
+	
+	void StopUseWeapon() const;
+
 	TFunction<void(AActor*)> AttachWeapon;
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		void TakeWeapon(AWeapon* Weapon);
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-		AWeapon* CreateWeapon(UClass* WeaponClass);
+		AWeapon* CreateWeapon(const TSubclassOf<AWeapon>& WeaponClass);
 
 	/** Returns CurrentWeapon subobject **/
     FORCEINLINE class AWeapon* GetCurrentWeapon() const { return CurrentWeapon; }

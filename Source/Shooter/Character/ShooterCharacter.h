@@ -106,9 +106,9 @@ protected:
 	void ActivateThirdPersonCamera() const;
 
 	/** Function that handles firing */
-	void Fire();
+	void Fire() { if (WeaponManager) WeaponManager->UseWeapon(); }
 
-	void StopFire();
+	void StopFire() { if (WeaponManager) WeaponManager->StopUseWeapon(); }
 	
 	/* Start Crouch */
 	void StartCrouch();

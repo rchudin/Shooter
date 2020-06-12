@@ -9,11 +9,15 @@ AShooterGameMode::AShooterGameMode()
 {
 	// set default pawn class to our Blueprinted character
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Shooter/Characters/UE4/BP_UnrealEngineCharacter"));
-	static ConstructorHelpers::FClassFinder<AHUD> HUD(TEXT("/Game/Shooter/UI/BP_InGameHud"));
-	if (PlayerPawnBPClass.Class != nullptr)
+	static ConstructorHelpers::FClassFinder<AHUD> HudBPClass(TEXT("/Game/Shooter/UI/BP_InGameHud"));
+	if (PlayerPawnBPClass.Class)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
-		HUDClass = HUD.Class;
 		PlayerControllerClass = AShooterPlayerController::StaticClass();
+	}
+	
+	if (HudBPClass.Class)
+	{
+		HUDClass = HudBPClass.Class;
 	}
 }
