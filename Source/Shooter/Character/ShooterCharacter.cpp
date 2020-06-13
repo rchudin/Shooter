@@ -85,7 +85,7 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 
 	UE_LOG(LogTemp, Warning, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
 
-	
+	SetupWeaponManagerHud();
 	
 	/* TEMPORARY */
 	if (HasAuthority())
@@ -141,6 +141,23 @@ void AShooterCharacter::StopCrouch()
 	UnCrouch();
 }
 
+void AShooterCharacter::SetupWeaponManagerHud() const
+{
+	UE_LOG(LogTemp, Warning, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
+
+	if (WeaponManager)
+	{
+		const APlayerController* PC = Cast<APlayerController>(GetController());
+		if(PC)
+		{
+			AInGameHud* Hud = Cast<AInGameHud>(PC->GetHUD());
+			if (Hud)
+			{
+				WeaponManager->SetInGameHud(Hud);
+			}
+		}
+	}
+}
 
 FRotator AShooterCharacter::GetAimRotation(const int BoneCount) const
 {

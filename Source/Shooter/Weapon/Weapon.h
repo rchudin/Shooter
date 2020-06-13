@@ -6,8 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "Shooter/UI/InGameHud.h"
 #include "Engine/DataTable.h"
+#include "Ammo.h"
 #include "Weapon.generated.h"
 
 UENUM()
@@ -26,23 +26,14 @@ class SHOOTER_API AWeapon : public AActor
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh",meta = (AllowPrivateAccess = "true"))
 		class USkeletalMeshComponent* Mesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Display", meta = (AllowPrivateAccess = "true"))
-        AInGameHud* InGameHud;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 		TEnumAsByte<EWeaponType> Type;
 
-	UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_CurrentAmmo, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-        int CurrentAmmo;
-	
-	UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_TotalAmmo, Category = "Stats",  meta = (AllowPrivateAccess = "true"))
-		int TotalAmmo;
-
 	UFUNCTION()
-		void OnRep_CurrentAmmo();
+		void OnRep_CurrentAmmo() const  { CurrentAmmo.OnUpdate(); }
 	
 	UFUNCTION()
-		void OnRep_TotalAmmo();
+		void OnRep_TotalAmmo() const { TotalAmmo.OnUpdate(); }
 
 public:	
 	// Sets default values for this actor's properties
@@ -70,6 +61,12 @@ protected:
 	
 	//use toggle switch
 	bool FireTimerExpired;
+
+	UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_CurrentAmmo, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+        FAmmo CurrentAmmo;
+	
+	UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_TotalAmmo, Category = "Stats",  meta = (AllowPrivateAccess = "true"))
+        FAmmo TotalAmmo;
 	
 	UPROPERTY(EditAnywhere, Category = Stats)
         int MaxTotalAmmo;
@@ -82,10 +79,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = Stats)
         float UseRange;
-
-	void AddCurrentAmmo(const int& Count);
-	
-	void AddTotalAmmo(const int& Count);
 	
 	virtual void Use() { check(0 && "You must override this"); }
 
@@ -97,16 +90,13 @@ protected:
 
 	void DrawDebugFireLine(FHitResult& OutHit, FVector& Start, FVector& End) const;
 
-	void UpdateHudCurrentAmmo();
-
-	void UpdateHudTotalAmmo();
-
 	UFUNCTION(Reliable, NetMulticast)
 		void MulticastUseEffects();
 	
 public:
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-		void UpdateHud();
+	void SetCurrentAmmoUpdateFunction(TFunction<void(const int& Value)> F) {CurrentAmmo.UpdateHud = F; CurrentAmmo.OnUpdate(); }
+	
+	void SetTotalAmmoUpdateFunction(TFunction<void(const int& Value)> F) {TotalAmmo.UpdateHud = F; TotalAmmo.OnUpdate(); }
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		virtual void ResetWeapon();

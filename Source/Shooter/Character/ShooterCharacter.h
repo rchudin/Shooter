@@ -114,6 +114,8 @@ protected:
 	
 	/* Stop Crouch*/
 	void StopCrouch();
+
+	void SetupWeaponManagerHud() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
         FRotator GetAimRotation(int BoneCount) const;

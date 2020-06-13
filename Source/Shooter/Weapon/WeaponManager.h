@@ -6,7 +6,6 @@
 #include "Components/ActorComponent.h"
 #include "Weapon.h"
 #include "Shooter/UI/InGameHud.h"
-
 #include "WeaponManager.generated.h"
 
 
@@ -15,6 +14,9 @@ class SHOOTER_API UWeaponManager : public UActorComponent
 {
 	GENERATED_BODY()
 private:
+	UPROPERTY(VisibleAnywhere, Transient, Category = "Display", meta = (AllowPrivateAccess = "true"))
+        AInGameHud* InGameHud;
+	
 	UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_CurrentWeapon, Category = "Weapon")
 		class AWeapon* CurrentWeapon;
 
@@ -26,7 +28,11 @@ private:
 
 	/** Called when the CurrentWeapon variable gets updated */
 	UFUNCTION()
-		void OnRep_CurrentWeapon() const;
+		void OnRep_CurrentWeapon();
+
+	void UpdateHudCurrentAmmo(const int& Count) const { if(InGameHud) InGameHud->UpdateCurrentAmmo(Count); }
+	
+	void UpdateHudTotalAmmo(const int& Count) const { if(InGameHud) InGameHud->UpdateTotalAmmo(Count); }
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -35,6 +41,11 @@ protected:
 public:	
 	// Sets default values for this component's properties
 	UWeaponManager();
+
+	UFUNCTION()
+		void SetInGameHud(AInGameHud* NewInGameHud);
+
+	void SetupUpdateInGameHud();
 
 	void UseWeapon() const;
 	

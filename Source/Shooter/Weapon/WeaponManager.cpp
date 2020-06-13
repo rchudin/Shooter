@@ -14,6 +14,13 @@ UWeaponManager::UWeaponManager()
 	SetIsReplicated(true);
 }
 
+void UWeaponManager::SetInGameHud(AInGameHud* NewInGameHud)
+{
+	UE_LOG(LogTemp, Log, TEXT("%s: %s"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
+	
+	InGameHud = NewInGameHud;
+}
+
 void UWeaponManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps); 
@@ -26,7 +33,6 @@ void UWeaponManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 void UWeaponManager::UseWeapon() const
 {
 	if (CurrentWeapon) CurrentWeapon->ServerUse();
-	
 }
 
 void UWeaponManager::StopUseWeapon() const
@@ -34,9 +40,36 @@ void UWeaponManager::StopUseWeapon() const
 	if (CurrentWeapon) CurrentWeapon->ServerStopUse();
 }
 
+void UWeaponManager::SetupUpdateInGameHud()
+{
+	UE_LOG(LogTemp, Log, TEXT("%s: %s"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
+	if (CurrentWeapon)
+	{
+		AInGameHud** RefHud = &InGameHud; 
+		CurrentWeapon->SetCurrentAmmoUpdateFunction([RefHud](const int& Count)
+		{
+			if (RefHud)
+			{
+				AInGameHud* Hud = *RefHud;
+				if (Hud) Hud->UpdateCurrentAmmo(Count);
+			}
+		});
+		
+		CurrentWeapon->SetTotalAmmoUpdateFunction([RefHud](const int& Count)
+        {
+            if (RefHud)
+            {
+                AInGameHud* Hud = *RefHud;
+                if (Hud) Hud->UpdateTotalAmmo(Count);
+            }
+        });
+	}
+}
 
 AWeapon* UWeaponManager::CreateWeapon(const TSubclassOf<AWeapon>& WeaponClass)
 {
+	UE_LOG(LogTemp, Warning, TEXT("%s: %s"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
+
 	/*if (!WeaponClass->IsChildOf(AWeapon::StaticClass()))
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s: %s - WEAPON CLASS NOT WEAPON"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
@@ -66,7 +99,7 @@ AWeapon* UWeaponManager::CreateWeapon(const TSubclassOf<AWeapon>& WeaponClass)
 	return  Weapon;
 }
 
-void UWeaponManager::OnRep_CurrentWeapon() const
+void UWeaponManager::OnRep_CurrentWeapon() 
 {
 	if (CurrentWeapon)
 	{
@@ -79,7 +112,9 @@ void UWeaponManager::OnRep_CurrentWeapon() const
 			const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
 			CurrentWeapon->AttachToComponent(GetOwner()->GetRootComponent(), Rules);
 		}
-		CurrentWeapon->UpdateHud();
+
+		
+		SetupUpdateInGameHud();
 	}
 }
 

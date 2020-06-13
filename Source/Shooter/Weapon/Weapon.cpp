@@ -35,46 +35,6 @@ void AWeapon::BeginPlay()
 	ResetAmmo();
 }
 
-void AWeapon::AddCurrentAmmo(const int& Count)
-{
-	if(Count < 0 && CurrentAmmo < Count * -1 )
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s: %s Invalid value"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-		return;
-	}
-	CurrentAmmo += Count;
-
-	if (!HasAuthority() || GetNetMode() == NM_Standalone)
-	{
-		UpdateHudCurrentAmmo();
-	}
-}
-
-void AWeapon::AddTotalAmmo(const int& Count)
-{
-	if (Count < 0 && TotalAmmo < Count * -1)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s: %s Invalid value"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-		return;
-	}
-	TotalAmmo += Count;
-
-	if (!HasAuthority() || GetNetMode() == NM_Standalone)
-	{
-         UpdateHudTotalAmmo();       
-	}
-}
-
-void AWeapon::OnRep_CurrentAmmo()
-{
-	UpdateHudCurrentAmmo();
-}
-
-void AWeapon::OnRep_TotalAmmo()
-{
-	UpdateHudTotalAmmo();
-}
-
 
 void AWeapon::Trace(FHitResult& OutHit, FVector& Start, FVector& End) const
 {
@@ -129,45 +89,6 @@ void AWeapon::DrawDebugFireLine(FHitResult& OutHit, FVector& Start, FVector& End
 	DrawDebugSphere(GetWorld(), End, 10.f, 8, FColor::Red, false, 3.0f);
 }
 
-void AWeapon::UpdateHudCurrentAmmo()
-{
-	if (InGameHud)
-	{
-		InGameHud->UpdateCurrentAmmo(CurrentAmmo);
-	}else
-	{
-		APlayerController* PlayerController = Cast<APlayerController>(GetOwner());
-		if (PlayerController)
-		{
-			AInGameHud* NewHud =  Cast<AInGameHud>(PlayerController->GetHUD());
-			if (NewHud)
-			{
-				InGameHud = NewHud;
-				InGameHud->UpdateCurrentAmmo(CurrentAmmo);
-			}
-		}
-	}
-}
-
-void AWeapon::UpdateHudTotalAmmo()
-{
-	if (InGameHud)
-	{
-		InGameHud->UpdateTotalAmmo(TotalAmmo);
-	}else
-	{
-		APlayerController* PlayerController = Cast<APlayerController>(GetOwner());
-		if (PlayerController)
-		{
-			AInGameHud* NewHud =  Cast<AInGameHud>(PlayerController->GetHUD());
-			if (NewHud)
-			{
-				InGameHud = NewHud;
-				InGameHud->UpdateTotalAmmo(TotalAmmo);
-			}
-		}
-	}
-}
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -177,17 +98,13 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	DOREPLIFETIME_CONDITION(AWeapon, CurrentAmmo, COND_OwnerOnly);
 }
 
-void AWeapon::UpdateHud()
-{
-	UpdateHudCurrentAmmo();
-	UpdateHudTotalAmmo();
-}
 
 void AWeapon::ResetWeapon()
 {
 	SetInstigator(nullptr);
 	SetOwner(nullptr);
-	InGameHud = nullptr;
+	CurrentAmmo.UpdateHud = nullptr;
+	TotalAmmo.UpdateHud = nullptr;
 }
 
 void AWeapon::ResetAmmo()
