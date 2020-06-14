@@ -14,12 +14,6 @@ UWeaponManager::UWeaponManager()
 	SetIsReplicated(true);
 }
 
-void UWeaponManager::SetInGameHud(AInGameHud* NewInGameHud)
-{
-	UE_LOG(LogTemp, Log, TEXT("%s: %s"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-	
-	InGameHud = NewInGameHud;
-}
 
 void UWeaponManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -29,6 +23,74 @@ void UWeaponManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME_CONDITION(UWeaponManager, MainWeapon, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(UWeaponManager, SecondaryWeapon, COND_OwnerOnly);
 }
+
+
+void UWeaponManager::CreateWidgets()
+{
+	if (GetOwner() && (!GetOwner()->HasAuthority() || GetNetMode() == NM_Standalone))
+	{
+		if(CrosshairWidgetClass && !CrosshairWidget)
+		{
+			if (!CrosshairWidget)
+			{
+				CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
+			}
+			if (CrosshairWidget) CrosshairWidget->AddToViewport();
+		}
+
+		if (AmmoWidgetClass && !AmmoWidget)
+		{
+			if (!AmmoWidget)
+			{
+				AmmoWidget = CreateWidget<UAmmoWidget>(GetWorld(), AmmoWidgetClass);
+			}
+			if (AmmoWidget) AmmoWidget->AddToViewport();
+		}
+	}
+}
+
+
+void UWeaponManager::RemoveWidgets() const
+{
+	RemoveUpdatingWidgetInWeapon();
+	if (CrosshairWidget)
+	{
+		if (CrosshairWidget->IsInViewport()) CrosshairWidget->RemoveFromViewport();
+		CrosshairWidget->Destruct();
+	}
+
+	if(AmmoWidget)
+	{
+		if (AmmoWidget->IsInViewport()) AmmoWidget->RemoveFromViewport();
+		AmmoWidget->Destruct();
+	}
+}
+
+void UWeaponManager::SetUpdatingWidgetInWeapon()
+{
+	if (CurrentWeapon)
+	{
+		UAmmoWidget** RefWidget = &AmmoWidget; 
+		CurrentWeapon->SetOnCurrentAmmoUpdateFunction([RefWidget](const int& Count)
+        {
+            if (RefWidget)
+            {
+                UAmmoWidget* Widget = *RefWidget;
+                if (Widget) Widget->UpdateCurrentAmmo(Count);
+            }
+        });
+		
+		CurrentWeapon->SetOnTotalAmmoUpdateFunction([RefWidget](const int& Count)
+        {
+            if (RefWidget)
+            {
+                UAmmoWidget* Widget = *RefWidget;
+                if (Widget) Widget->UpdateTotalAmmo(Count);
+            }
+        });
+	}
+}
+
 
 void UWeaponManager::UseWeapon() const
 {
@@ -40,64 +102,6 @@ void UWeaponManager::StopUseWeapon() const
 	if (CurrentWeapon) CurrentWeapon->ServerStopUse();
 }
 
-void UWeaponManager::SetupUpdateInGameHud()
-{
-	UE_LOG(LogTemp, Log, TEXT("%s: %s"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-	if (CurrentWeapon)
-	{
-		AInGameHud** RefHud = &InGameHud; 
-		CurrentWeapon->SetCurrentAmmoUpdateFunction([RefHud](const int& Count)
-		{
-			if (RefHud)
-			{
-				AInGameHud* Hud = *RefHud;
-				if (Hud) Hud->UpdateCurrentAmmo(Count);
-			}
-		});
-		
-		CurrentWeapon->SetTotalAmmoUpdateFunction([RefHud](const int& Count)
-        {
-            if (RefHud)
-            {
-                AInGameHud* Hud = *RefHud;
-                if (Hud) Hud->UpdateTotalAmmo(Count);
-            }
-        });
-	}
-}
-
-AWeapon* UWeaponManager::CreateWeapon(const TSubclassOf<AWeapon>& WeaponClass)
-{
-	UE_LOG(LogTemp, Warning, TEXT("%s: %s"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-
-	/*if (!WeaponClass->IsChildOf(AWeapon::StaticClass()))
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s: %s - WEAPON CLASS NOT WEAPON"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-		return  nullptr;
-	}*/
-	
-	AActor* Owner = GetOwner();
-	if (!Owner)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s: %s - CANT FIND OWNER"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-		return nullptr;
-	}
-	
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = Owner;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	const FVector Location =  Owner->GetActorLocation();
-	const FRotator Rotation = Owner->GetActorRotation();
-
-	auto World = GetWorld();
-	AWeapon* Weapon = nullptr;
-	if (World){
-		Weapon = World->SpawnActor<AWeapon>(WeaponClass, Location, Rotation, SpawnParams);
-	}else{
-		UE_LOG(LogTemp, Error, TEXT("%s: %s - CANT FIND WORLD"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-	}
-	return  Weapon;
-}
 
 void UWeaponManager::OnRep_CurrentWeapon() 
 {
@@ -113,8 +117,7 @@ void UWeaponManager::OnRep_CurrentWeapon()
 			CurrentWeapon->AttachToComponent(GetOwner()->GetRootComponent(), Rules);
 		}
 
-		
-		SetupUpdateInGameHud();
+		SetUpdatingWidgetInWeapon();
 	}
 }
 
@@ -127,8 +130,9 @@ void UWeaponManager::TakeWeapon(AWeapon* Weapon)
 	{
 		if (CurrentWeapon)
 		{
-			CurrentWeapon->ResetWeapon();
+			CurrentWeapon->Throw();
 		}
+		
 		CurrentWeapon = Weapon;
 		APawn* Pawn =  Cast<APawn>(GetOwner());
 		CurrentWeapon->SetInstigator(Pawn);

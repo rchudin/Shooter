@@ -35,7 +35,9 @@ class SHOOTER_API AWeapon : public AActor
 	UFUNCTION()
 		void OnRep_TotalAmmo() const { TotalAmmo.OnUpdate(); }
 
-public:	
+public:
+	static  AWeapon* CreateWeapon(UWorld* World, const TSubclassOf<AWeapon>& WeaponClass, const FVector& Location);
+	
 	// Sets default values for this actor's properties
 	AWeapon();
 
@@ -52,9 +54,6 @@ public:
 	bool CanBeUsed() const;
 
 protected:
-	// Called when the game starts or when spawned
-    virtual void BeginPlay() override;
-
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	FTimerHandle FireTimerHandle;
@@ -67,18 +66,22 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_TotalAmmo, Category = "Stats",  meta = (AllowPrivateAccess = "true"))
         FAmmo TotalAmmo;
+
+	UPROPERTY(EditAnywhere, Category = Stats)
+        int MaxCurrentAmmo;
 	
 	UPROPERTY(EditAnywhere, Category = Stats)
         int MaxTotalAmmo;
-
-	UPROPERTY(EditAnywhere, Category = Stats)
-		int MaxCurrentAmmo;
 
 	UPROPERTY(EditAnywhere, Category = Stats)
 		float UseRate;
 
 	UPROPERTY(EditAnywhere, Category = Stats)
         float UseRange;
+
+	void SetMaxAmmo();
+
+	virtual void OnRep_Instigator() override;
 	
 	virtual void Use() { check(0 && "You must override this"); }
 
@@ -94,15 +97,13 @@ protected:
 		void MulticastUseEffects();
 	
 public:
-	void SetCurrentAmmoUpdateFunction(TFunction<void(const int& Value)> F) {CurrentAmmo.UpdateHud = F; CurrentAmmo.OnUpdate(); }
+	void RemoveUpdatingWidget();
 	
-	void SetTotalAmmoUpdateFunction(TFunction<void(const int& Value)> F) {TotalAmmo.UpdateHud = F; TotalAmmo.OnUpdate(); }
+	void SetOnCurrentAmmoUpdateFunction(TFunction<void(const int& Value)> F) {CurrentAmmo.UpdateWidget = F; CurrentAmmo.OnUpdate(); }
 	
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-		virtual void ResetWeapon();
+	void SetOnTotalAmmoUpdateFunction(TFunction<void(const int& Value)> F) {TotalAmmo.UpdateWidget = F; TotalAmmo.OnUpdate(); }
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon stats")
-		void ResetAmmo();
+	void Throw();
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon stats")
 		 int GetCurrentAmmo() const { return CurrentAmmo; }

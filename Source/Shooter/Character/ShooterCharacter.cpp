@@ -81,11 +81,10 @@ void AShooterCharacter::BeginPlay()
 
 void AShooterCharacter::PossessedBy(AController* NewController)
 {
+	UE_LOG(LogTemp, Log, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
 	Super::PossessedBy(NewController);
 
-	UE_LOG(LogTemp, Warning, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-
-	SetupWeaponManagerHud();
+	WeaponManager->CreateWidgets();
 	
 	/* TEMPORARY */
 	if (HasAuthority())
@@ -96,12 +95,20 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 			const FWeaponInstance* WeaponInstance = PState->GetDefaultMainWeapon();
 			if (WeaponInstance)
 			{
-				AWeapon* NewWeapon = WeaponManager->CreateWeapon(WeaponInstance->Weapon);
+				AWeapon* NewWeapon = AWeapon::CreateWeapon(GetWorld(), WeaponInstance->Weapon, this->GetActorLocation());
 				if (NewWeapon) WeaponManager->TakeWeapon(NewWeapon);
 			}
 		}
 	}
 	/* TEMPORARY */
+}
+
+void AShooterCharacter::OnRep_Controller()
+{
+	UE_LOG(LogTemp, Log, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
+	Super::OnRep_Controller();
+
+	WeaponManager->CreateWidgets();
 }
 
 void AShooterCharacter::ActivateFirstPersonCamera() const
@@ -139,24 +146,6 @@ void AShooterCharacter::StopCrouch()
 	UE_LOG(LogTemp, Log, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
 
 	UnCrouch();
-}
-
-void AShooterCharacter::SetupWeaponManagerHud() const
-{
-	UE_LOG(LogTemp, Warning, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-
-	if (WeaponManager)
-	{
-		const APlayerController* PC = Cast<APlayerController>(GetController());
-		if(PC)
-		{
-			AInGameHud* Hud = Cast<AInGameHud>(PC->GetHUD());
-			if (Hud)
-			{
-				WeaponManager->SetInGameHud(Hud);
-			}
-		}
-	}
 }
 
 FRotator AShooterCharacter::GetAimRotation(const int BoneCount) const

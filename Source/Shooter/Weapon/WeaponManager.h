@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Weapon.h"
-#include "Shooter/UI/InGameHud.h"
+#include "Shooter/UI/Widget/AmmoWidget.h"
 #include "WeaponManager.generated.h"
 
 
@@ -13,9 +13,18 @@ UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class SHOOTER_API UWeaponManager : public UActorComponent
 {
 	GENERATED_BODY()
-private:
-	UPROPERTY(VisibleAnywhere, Transient, Category = "Display", meta = (AllowPrivateAccess = "true"))
-        AInGameHud* InGameHud;
+
+	UPROPERTY(EditAnywhere, Category = "Widget", meta = (AllowPrivateAccess = "true"))
+            TSubclassOf<UUserWidget> CrosshairWidgetClass;
+
+	UPROPERTY()
+        class UUserWidget* CrosshairWidget;
+    
+	UPROPERTY(EditAnywhere, Category = "Widget", meta = (AllowPrivateAccess = "true"))
+        TSubclassOf<UAmmoWidget> AmmoWidgetClass;
+    
+	UPROPERTY()
+        class UAmmoWidget* AmmoWidget;
 	
 	UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_CurrentWeapon, Category = "Weapon")
 		class AWeapon* CurrentWeapon;
@@ -30,22 +39,20 @@ private:
 	UFUNCTION()
 		void OnRep_CurrentWeapon();
 
-	void UpdateHudCurrentAmmo(const int& Count) const { if(InGameHud) InGameHud->UpdateCurrentAmmo(Count); }
-	
-	void UpdateHudTotalAmmo(const int& Count) const { if(InGameHud) InGameHud->UpdateTotalAmmo(Count); }
-
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	void SetUpdatingWidgetInWeapon();
+	
+	void RemoveUpdatingWidgetInWeapon() const { if (CurrentWeapon) CurrentWeapon->RemoveUpdatingWidget(); }
 
 public:	
 	// Sets default values for this component's properties
 	UWeaponManager();
 
-	UFUNCTION()
-		void SetInGameHud(AInGameHud* NewInGameHud);
+	void CreateWidgets();
 
-	void SetupUpdateInGameHud();
+	void RemoveWidgets() const;
 
 	void UseWeapon() const;
 	
@@ -55,9 +62,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		void TakeWeapon(AWeapon* Weapon);
-	
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-		AWeapon* CreateWeapon(const TSubclassOf<AWeapon>& WeaponClass);
 
 	/** Returns CurrentWeapon subobject **/
     FORCEINLINE class AWeapon* GetCurrentWeapon() const { return CurrentWeapon; }

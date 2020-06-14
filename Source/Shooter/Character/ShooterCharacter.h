@@ -63,6 +63,8 @@ protected:
 
 	virtual void PossessedBy(AController * NewController) override;
 
+	virtual void OnRep_Controller() override;
+
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -114,15 +116,13 @@ protected:
 	
 	/* Stop Crouch*/
 	void StopCrouch();
-
-	void SetupWeaponManagerHud() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
         FRotator GetAimRotation(int BoneCount) const;
 
 	/** Returns IsArmed **/
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-		bool GetIsArmed() const {return WeaponManager && WeaponManager->GetCurrentWeapon() ? true : false; };
+		bool GetIsArmed() const {return WeaponManager && WeaponManager->GetCurrentWeapon(); }
 
 public:
 	/** Returns CameraBoom sub object **/

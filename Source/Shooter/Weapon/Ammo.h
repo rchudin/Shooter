@@ -48,9 +48,9 @@ struct FAmmo
 
 	operator int() const {return  Count; }
 
-	TFunction<void(const int& Value)> UpdateHud;
+	TFunction<void(const int& Value)> UpdateWidget;
 
-	void OnUpdate() const { if (UpdateHud) UpdateHud(Count); }
+	void OnUpdate() const { if (UpdateWidget) UpdateWidget(Count); }
 private:
 	UPROPERTY()
 		int Count;

@@ -3,6 +3,18 @@
 #include "Weapon.h"
 #include "Shooter/Character/ShooterCharacter.h"
 
+AWeapon* AWeapon::CreateWeapon(UWorld* World, const TSubclassOf<AWeapon>& WeaponClass, const FVector& Location)
+{
+	if (World)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		AWeapon* NewWeapon = World->SpawnActor<AWeapon>(WeaponClass, Location, FRotator(), SpawnParams);
+		if (NewWeapon) NewWeapon->SetMaxAmmo();
+		return  NewWeapon;
+	}
+	return nullptr;
+}
 
 // Sets default values
 AWeapon::AWeapon()
@@ -23,16 +35,45 @@ AWeapon::AWeapon()
 	}
 
 	MaxTotalAmmo = 180;
-	MaxCurrentAmmo = 30;
+	MaxCurrentAmmo = 31;
 	UseRate = 0.5f;
 	UseRange = 1000.f;
 }
 
-void AWeapon::BeginPlay()
+void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::BeginPlay();
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(AWeapon, TotalAmmo, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AWeapon, CurrentAmmo, COND_OwnerOnly);
+}
+
+void AWeapon::OnRep_Instigator()
+{
+	Super::OnRep_Owner();
 	
-	ResetAmmo();
+	RemoveUpdatingWidget();
+}
+
+void AWeapon::SetMaxAmmo()
+{
+	CurrentAmmo = MaxCurrentAmmo;
+	TotalAmmo = MaxTotalAmmo;
+}
+
+
+void AWeapon::Throw()
+{
+	RemoveUpdatingWidget();
+	SetOwner(nullptr);
+	SetInstigator(nullptr);
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+}
+
+void AWeapon::RemoveUpdatingWidget()
+{
+	CurrentAmmo.UpdateWidget = nullptr;
+	TotalAmmo.UpdateWidget = nullptr;
 }
 
 
@@ -89,29 +130,6 @@ void AWeapon::DrawDebugFireLine(FHitResult& OutHit, FVector& Start, FVector& End
 	DrawDebugSphere(GetWorld(), End, 10.f, 8, FColor::Red, false, 3.0f);
 }
 
-
-void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION(AWeapon, TotalAmmo, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(AWeapon, CurrentAmmo, COND_OwnerOnly);
-}
-
-
-void AWeapon::ResetWeapon()
-{
-	SetInstigator(nullptr);
-	SetOwner(nullptr);
-	CurrentAmmo.UpdateHud = nullptr;
-	TotalAmmo.UpdateHud = nullptr;
-}
-
-void AWeapon::ResetAmmo()
-{
-	CurrentAmmo = MaxCurrentAmmo;
-	TotalAmmo = MaxTotalAmmo;
-}
 
 void AWeapon::MulticastUseEffects_Implementation()
 {
