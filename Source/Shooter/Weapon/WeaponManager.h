@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Weapon.h"
+#include "FireWeapon.h"
 #include "Shooter/UI/Widget/AmmoWidget.h"
 #include "WeaponManager.generated.h"
 

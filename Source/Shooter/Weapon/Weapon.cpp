@@ -3,6 +3,8 @@
 #include "Weapon.h"
 #include "Shooter/Character/ShooterCharacter.h"
 
+
+
 AWeapon* AWeapon::CreateWeapon(UWorld* World, const TSubclassOf<AWeapon>& WeaponClass, const FVector& Location)
 {
 	if (World)
@@ -10,7 +12,7 @@ AWeapon* AWeapon::CreateWeapon(UWorld* World, const TSubclassOf<AWeapon>& Weapon
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		AWeapon* NewWeapon = World->SpawnActor<AWeapon>(WeaponClass, Location, FRotator(), SpawnParams);
-		if (NewWeapon) NewWeapon->SetMaxAmmo();
+		if (NewWeapon) NewWeapon->RestoreToDefaultStats();
 		return  NewWeapon;
 	}
 	return nullptr;
@@ -33,32 +35,14 @@ AWeapon::AWeapon()
 		Mesh->SetupAttachment(RootComponent);
 		Mesh->SetWorldLocationAndRotation(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f));
 	}
-
-	MaxTotalAmmo = 180;
-	MaxCurrentAmmo = 31;
-	UseRate = 0.5f;
-	UseRange = 1000.f;
 }
 
-void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION(AWeapon, TotalAmmo, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(AWeapon, CurrentAmmo, COND_OwnerOnly);
-}
 
 void AWeapon::OnRep_Instigator()
 {
 	Super::OnRep_Owner();
 	
 	RemoveUpdatingWidget();
-}
-
-void AWeapon::SetMaxAmmo()
-{
-	CurrentAmmo = MaxCurrentAmmo;
-	TotalAmmo = MaxTotalAmmo;
 }
 
 
@@ -70,10 +54,11 @@ void AWeapon::Throw()
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 }
 
-void AWeapon::RemoveUpdatingWidget()
+void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	CurrentAmmo.UpdateWidget = nullptr;
-	TotalAmmo.UpdateWidget = nullptr;
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AWeapon, Scatter);
 }
 
 
@@ -93,34 +78,49 @@ void AWeapon::Trace(FHitResult& OutHit, FVector& Start, FVector& End) const
 	}
 }
 
-bool AWeapon::GetTrajectory(FVector& Start, FVector& End) const
+
+FVector AWeapon::GetForwardVector() const
 {
 	AShooterCharacter* Character = Cast<AShooterCharacter>(GetInstigator());
+	FVector ForwardVector;
 	if (Character)
 	{
-		FVector ForwardVector;
 		if (Character->GetController())
 		{
-			ForwardVector = Character->GetFollowCamera()->GetForwardVector();
-		}else
+			UCameraComponent* Camera = Character ? Character->GetFollowCamera(): nullptr;
+			ForwardVector = Camera ? Camera->GetForwardVector() : FVector();
+		}
+		else
 		{
 			ForwardVector = Character->GetBaseAimRotation().RotateVector(FVector(1.f,0.f,0.f));
 		}
-		
-		Start = Character->GetFollowCamera()->GetComponentLocation();
-		End = ((ForwardVector * UseRange) + Start);
-
-		return true;
 	}
-	return false;
+	
+	return ForwardVector;
 }
+
+
+FVector AWeapon::GetStartPoint() const
+{
+	AShooterCharacter* Character = Cast<AShooterCharacter>(GetInstigator());
+	UCameraComponent* Camera = Character ? Character->GetFollowCamera(): nullptr;
+	return Camera ? Camera->GetComponentLocation() : FVector();
+}
+
+
+void AWeapon::CalculateTrajectory(FVector& Start, FVector& End) const
+{
+	const FVector ForwardVector = GetForwardVector();
+	Start = GetStartPoint();
+	End = ((ForwardVector * UseRange) + Start);
+
+	UE_LOG(LogTemp, Log, TEXT("%s: Fire Start(x:%f, y:%f , z:%f)"), HasAuthority()?TEXT("Server"):TEXT("Client"),  Start.X, Start.Y, Start.Z)
+    UE_LOG(LogTemp, Log, TEXT("%s: Fire End(x:%f, y:%f , z:%f)"), HasAuthority()?TEXT("Server"):TEXT("Client"),   End.X, End.Y, End.Z)
+}
+
 
 void AWeapon::DrawDebugFireLine(FHitResult& OutHit, FVector& Start, FVector& End) const 
 {
-	
-	UE_LOG(LogTemp, Log, TEXT("%s: Fire Start(x:%f, y:%f , z:%f)"), HasAuthority()?TEXT("Server"):TEXT("Client"), Start.X, Start.Y, Start.Z);
-	UE_LOG(LogTemp, Log, TEXT("%s: Fire End(x:%f, y:%f , z:%f)"), HasAuthority()?TEXT("Server"):TEXT("Client"), End.X, End.Y, End.Z);
-        
 	if (!OutHit.Location.IsZero())
 	{
 		End = OutHit.Location;
@@ -131,40 +131,26 @@ void AWeapon::DrawDebugFireLine(FHitResult& OutHit, FVector& Start, FVector& End
 }
 
 
-void AWeapon::MulticastUseEffects_Implementation()
+void AWeapon::OnRep_Scatter()
 {
-	if (!HasAuthority() || GetNetMode() == NM_Standalone) {
-		UseEffects();
-	}
+	PlayUseEffects();
 }
 
-bool AWeapon::CanBeUsed() const
-{
-	if (CurrentAmmo <= 0) {
-		return false;
-	}
-
-	return true;
-}
 
 // [Server] Use
-bool AWeapon::Server_Use_Validate() { return true; }
 void AWeapon::Server_Use_Implementation()
 {
-	FireTimerExpired = false;
+	Pressed = true;
 
-	if (!FireTimerHandle.IsValid() || !GetWorldTimerManager().IsTimerActive(FireTimerHandle))
+	if (!UsagePeriodTimerHandle.IsValid() || !GetWorldTimerManager().IsTimerActive(UsagePeriodTimerHandle))
 	{
 		Use();
 	}
 }
 
+
 // [Server] StopUse
-bool AWeapon::Server_StopUse_Validate(){return true;}
 void AWeapon::Server_StopUse_Implementation()
 {
-	if (FireTimerHandle.IsValid() && GetWorldTimerManager().IsTimerActive(FireTimerHandle))
-	{
-		FireTimerExpired = true;
-	}
+	Pressed = false;
 }

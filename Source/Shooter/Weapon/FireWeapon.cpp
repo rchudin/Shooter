@@ -4,31 +4,75 @@
 #include "FireWeapon.h"
 #include "DrawDebugHelpers.h"
 #include "GameModeInfoCustomizer.h"
-#include "Math/Rotator.h"
-#include "Kismet/KismetMathLibrary.h"
+
+
+
+
+void AFireWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME_CONDITION(AFireWeapon, TotalAmmo, COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(AFireWeapon, CurrentAmmo, COND_OwnerOnly);
+}
 
 
 AFireWeapon::AFireWeapon()
 {
+    MaxCurrentAmmo = 31;
+    MaxTotalAmmo = 180;
+    UsageTimePeriod = 0.5f;
     UseRange = 10000.f;
 }
+
+
+void AFireWeapon::RestoreToDefaultStats()
+{
+    Super::RestoreToDefaultStats();
+    
+    CurrentAmmo = MaxCurrentAmmo;
+    TotalAmmo = MaxTotalAmmo;
+}
+
+
+bool AFireWeapon::CanBeUsed() const
+{
+    if (CurrentAmmo <= 0) {
+        return false;
+    }
+
+    return true;
+}
+
+
+void AFireWeapon::RemoveUpdatingWidget()
+{
+    CurrentAmmo.UpdateWidget = nullptr;
+    TotalAmmo.UpdateWidget = nullptr;
+}
+
 
 void AFireWeapon::Use()
 {
     if (CanBeUsed()) {
-
         UE_LOG(LogTemp, Log, TEXT("%s: Use Weapon"), HasAuthority()?TEXT("Server"):TEXT("Client"));
         
         UWorld* World = GetWorld();
         if (World) {
             FTimerDelegate TimerCallback;
-            TimerCallback.BindLambda([this,World]
+            TimerCallback.BindLambda([&, World]
             {
-                World->GetTimerManager().ClearTimer(FireTimerHandle);
+                if (CanBeUsed() && AutoFire && Pressed)
+                {
+                    Fire();
+                }
+                else
+                {
+                    World->GetTimerManager().ClearTimer(UsagePeriodTimerHandle);
+                }
             });
-            World->GetTimerManager().SetTimer(FireTimerHandle, TimerCallback, UseRate, false);
-
             Fire();
+            World->GetTimerManager().SetTimer(UsagePeriodTimerHandle, TimerCallback, UsageTimePeriod, true);
         }
 
     }
@@ -36,42 +80,49 @@ void AFireWeapon::Use()
 
 void AFireWeapon::Fire()
 {
-    FHitResult OutHit;
-    FVector Start;
-    FVector End;
-    if (GetTrajectory(Start, End))
+    if (HasAuthority())
     {
-        CurrentAmmo --;
+        FHitResult OutHit;
+        FVector Start;
+        FVector End;
+        CalculateTrajectory(Start, End);
         Trace(OutHit, Start, End);
-        MulticastUseEffects();
+        --CurrentAmmo;
+        
+        Scatter = !Scatter;
+
+        if (GetNetMode() == NM_Standalone || GetLocalRole() == ROLE_Authority)
+        {
+            PlayUseEffects();
+        }
     }
 }
 
 
-void AFireWeapon::UseEffects()
+void AFireWeapon::PlayUseEffects()
 {
     FHitResult OutHit;
     FVector Start;
     FVector End;
-    if (GetTrajectory(Start, End))
+    CalculateTrajectory(Start, End);
+    Trace(OutHit, Start, End);
+
+    Trace(OutHit, Start, End);
+    if (GetMesh())
     {
-        Trace(OutHit, Start, End);
-        if (GetMesh())
+        const FVector NewStart = GetMesh()->GetSocketLocation("skt_muzzle");
+        if (!NewStart.IsZero())
         {
-            const FVector NewStart = GetMesh()->GetSocketLocation("skt_muzzle");
-            if (!NewStart.IsZero())
+            Start = NewStart;
+            /*if (Projectile)
             {
-                Start = NewStart;
-                if (Projectile)
-                {
-                    FRotator Rotate =  UKismetMathLibrary::FindLookAtRotation(Start, OutHit.Location);
-                }
-            }
-            if (FireAnimation) {
-                GetMesh()->PlayAnimation(FireAnimation, false);
-            }
+                FRotator Rotate =  UKismetMathLibrary::FindLookAtRotation(Start, OutHit.Location);
+            }*/
         }
-        
-        DrawDebugFireLine(OutHit, Start, End);
+        if (FireAnimation) {
+            GetMesh()->PlayAnimation(FireAnimation, false);
+        }
     }
+        
+    DrawDebugFireLine(OutHit, Start, End);
 }

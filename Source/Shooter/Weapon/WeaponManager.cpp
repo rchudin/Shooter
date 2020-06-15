@@ -73,10 +73,11 @@ void UWeaponManager::RemoveWidgets() const
 
 void UWeaponManager::SetUpdatingWidgetInWeapon()
 {
-	if (CurrentWeapon)
+	auto FWeapon = Cast<AFireWeapon>(CurrentWeapon);
+	if (FWeapon)
 	{
 		UAmmoWidget** RefWidget = &AmmoWidget; 
-		CurrentWeapon->SetOnCurrentAmmoUpdateFunction([RefWidget](const int& Count)
+		FWeapon->SetOnCurrentAmmoUpdateFunction([RefWidget](const int& Count)
         {
             if (RefWidget)
             {
@@ -85,7 +86,7 @@ void UWeaponManager::SetUpdatingWidgetInWeapon()
             }
         });
 		
-		CurrentWeapon->SetOnTotalAmmoUpdateFunction([RefWidget](const int& Count)
+		FWeapon->SetOnTotalAmmoUpdateFunction([RefWidget](const int& Count)
         {
             if (RefWidget)
             {
