@@ -4,8 +4,6 @@
 #include "WeaponManager.h"
 
 
-
-
 // Sets default values for this component's properties
 UWeaponManager::UWeaponManager()
 {
@@ -27,29 +25,25 @@ void UWeaponManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 void UWeaponManager::OnRep_CurrentWeapon()
 {
-	AttachCurrentWeapon();
+	AttachCurrentWeaponToHand();
 }
 
 
 void UWeaponManager::CreateWidgets()
 {
-	if (GetOwner() && (!GetOwner()->HasAuthority() || GetNetMode() == NM_Standalone))
+	if (GetNetMode() == NM_Standalone ||
+		GetOwnerRole() == ROLE_AutonomousProxy ||
+		GetNetMode() == NM_ListenServer && GetOwnerRole() != ROLE_Authority)
 	{
 		if(CrosshairWidgetClass && !CrosshairWidget)
 		{
-			if (!CrosshairWidget)
-			{
-				CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
-			}
+			CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
 			if (CrosshairWidget) CrosshairWidget->AddToViewport();
 		}
 
 		if (AmmoWidgetClass && !AmmoWidget)
 		{
-			if (!AmmoWidget)
-			{
-				AmmoWidget = CreateWidget<UAmmoWidget>(GetWorld(), AmmoWidgetClass);
-			}
+			AmmoWidget = CreateWidget<UAmmoWidget>(GetWorld(), AmmoWidgetClass);
 			if (AmmoWidget)
 			{
 				AmmoWidget->AddToViewport();
@@ -135,13 +129,22 @@ void UWeaponManager::SetInstigatorAndOwnerToWeapon() const
 	}
 }
 
-void UWeaponManager::AttachCurrentWeapon()
+void UWeaponManager::AttachCurrentWeaponToHand()
 {
 	if (CurrentWeapon)
 	{
 		const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
-		AttachWeapon ? AttachWeapon(CurrentWeapon, Rules) : CurrentWeapon->AttachToComponent(GetOwner()->GetRootComponent(), Rules);
-
+		if (AttachWeaponToHandFunction)
+		{
+			AttachWeaponToHandFunction(CurrentWeapon, Rules);
+		}
+		else
+		{
+			const auto ActorOwner = GetOwner();
+			if (ActorOwner)
+				CurrentWeapon->AttachToComponent(ActorOwner->GetRootComponent(), Rules);
+		}
+		
 		SetUpdatingWidgetInWeapon();
 	}
 }
@@ -158,7 +161,7 @@ void UWeaponManager::TakeWeapon(AWeapon* Weapon)
 		CurrentWeapon = Weapon;
 
 		SetInstigatorAndOwnerToWeapon();
-		
-		if (GetNetMode() == NM_Standalone) OnRep_CurrentWeapon();
+
+		AttachCurrentWeaponToHand();
 	}
 }

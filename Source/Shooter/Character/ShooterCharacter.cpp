@@ -67,7 +67,7 @@ AShooterCharacter::AShooterCharacter()
 
 	// Weapon Manager
 	WeaponManager = CreateDefaultSubobject<UWeaponManager>(TEXT("WeaponManager"));
-	WeaponManager->SetAttachWeaponFunction([&](AActor* Actor, const FAttachmentTransformRules Rules)
+	WeaponManager->SetAttachWeaponToHandFunction([&](AActor* Actor, const FAttachmentTransformRules Rules)
     {
 		Actor->AttachToComponent(GetMesh(), Rules, "skt_weapon");
     });

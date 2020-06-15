@@ -39,9 +39,9 @@ class SHOOTER_API UWeaponManager : public UActorComponent
 	UFUNCTION()
 		void OnRep_CurrentWeapon();
 
-	void AttachCurrentWeapon();
+	void AttachCurrentWeaponToHand();
 
-	TFunction<void(AActor*, FAttachmentTransformRules)> AttachWeapon;
+	TFunction<void(AActor*, FAttachmentTransformRules)> AttachWeaponToHandFunction;
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -70,5 +70,5 @@ public:
 	/** Returns CurrentWeapon sub object **/
     FORCEINLINE class AWeapon* GetCurrentWeapon() const { return CurrentWeapon; }
 
-	FORCEINLINE void SetAttachWeaponFunction(const TFunction<void(AActor*, FAttachmentTransformRules)> F) { AttachWeapon = F; };
+	FORCEINLINE void SetAttachWeaponToHandFunction(const TFunction<void(AActor*, FAttachmentTransformRules)> F) { AttachWeaponToHandFunction = F; };
 };
