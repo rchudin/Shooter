@@ -148,8 +148,8 @@ bool AWeapon::CanBeUsed() const
 }
 
 // [Server] Use
-bool AWeapon::ServerUse_Validate() { return true; }
-void AWeapon::ServerUse_Implementation()
+bool AWeapon::Server_Use_Validate() { return true; }
+void AWeapon::Server_Use_Implementation()
 {
 	FireTimerExpired = false;
 
@@ -160,8 +160,8 @@ void AWeapon::ServerUse_Implementation()
 }
 
 // [Server] StopUse
-bool AWeapon::ServerStopUse_Validate(){return true;}
-void AWeapon::ServerStopUse_Implementation()
+bool AWeapon::Server_StopUse_Validate(){return true;}
+void AWeapon::Server_StopUse_Implementation()
 {
 	if (FireTimerHandle.IsValid() && GetWorldTimerManager().IsTimerActive(FireTimerHandle))
 	{

@@ -39,12 +39,18 @@ class SHOOTER_API UWeaponManager : public UActorComponent
 	UFUNCTION()
 		void OnRep_CurrentWeapon();
 
+	void AttachCurrentWeapon();
+
+	TFunction<void(AActor*, FAttachmentTransformRules)> AttachWeapon;
+
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void SetUpdatingWidgetInWeapon();
 	
 	void RemoveUpdatingWidgetInWeapon() const;
+
+	void SetInstigatorAndOwnerToWeapon() const;
 
 public:	
 	// Sets default values for this component's properties
@@ -58,11 +64,11 @@ public:
 	
 	void StopUseWeapon() const;
 
-	TFunction<void(AActor*)> AttachWeapon;
-	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		void TakeWeapon(AWeapon* Weapon);
 
-	/** Returns CurrentWeapon subobject **/
+	/** Returns CurrentWeapon sub object **/
     FORCEINLINE class AWeapon* GetCurrentWeapon() const { return CurrentWeapon; }
+
+	FORCEINLINE void SetAttachWeaponFunction(const TFunction<void(AActor*, FAttachmentTransformRules)> F) { AttachWeapon = F; };
 };

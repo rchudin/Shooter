@@ -25,6 +25,12 @@ void UWeaponManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 }
 
 
+void UWeaponManager::OnRep_CurrentWeapon()
+{
+	AttachCurrentWeapon();
+}
+
+
 void UWeaponManager::CreateWidgets()
 {
 	if (GetOwner() && (!GetOwner()->HasAuthority() || GetNetMode() == NM_Standalone))
@@ -70,6 +76,7 @@ void UWeaponManager::RemoveWidgets() const
 	}
 }
 
+
 void UWeaponManager::SetUpdatingWidgetInWeapon()
 {
 	if (CurrentWeapon)
@@ -95,6 +102,7 @@ void UWeaponManager::SetUpdatingWidgetInWeapon()
 	}
 }
 
+
 void UWeaponManager::RemoveUpdatingWidgetInWeapon() const
 {
 	if (CurrentWeapon) CurrentWeapon->RemoveUpdatingWidget();
@@ -103,28 +111,36 @@ void UWeaponManager::RemoveUpdatingWidgetInWeapon() const
 
 void UWeaponManager::UseWeapon() const
 {
-	if (CurrentWeapon) CurrentWeapon->ServerUse();
+	if (CurrentWeapon) CurrentWeapon->Server_Use();
 }
+
 
 void UWeaponManager::StopUseWeapon() const
 {
-	if (CurrentWeapon) CurrentWeapon->ServerStopUse();
+	if (CurrentWeapon) CurrentWeapon->Server_StopUse();
 }
 
 
-void UWeaponManager::OnRep_CurrentWeapon() 
+void UWeaponManager::SetInstigatorAndOwnerToWeapon() const
 {
 	if (CurrentWeapon)
 	{
-		if (AttachWeapon)
+		APawn* Pawn =  Cast<APawn>(GetOwner());
+		CurrentWeapon->SetInstigator(Pawn);
+		if (Pawn)
 		{
-			AttachWeapon(CurrentWeapon);
+			AController* PlayerController = Pawn->GetController();
+			PlayerController ? CurrentWeapon->SetOwner(PlayerController) : CurrentWeapon->SetOwner(Pawn);
 		}
-		else
-		{
-			const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
-			CurrentWeapon->AttachToComponent(GetOwner()->GetRootComponent(), Rules);
-		}
+	}
+}
+
+void UWeaponManager::AttachCurrentWeapon()
+{
+	if (CurrentWeapon)
+	{
+		const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
+		AttachWeapon ? AttachWeapon(CurrentWeapon, Rules) : CurrentWeapon->AttachToComponent(GetOwner()->GetRootComponent(), Rules);
 
 		SetUpdatingWidgetInWeapon();
 	}
@@ -137,22 +153,12 @@ void UWeaponManager::TakeWeapon(AWeapon* Weapon)
 	
 	if (GetOwner()->HasAuthority() && Weapon)
 	{
-		if (CurrentWeapon)
-		{
-			CurrentWeapon->Throw();
-		}
+		if (CurrentWeapon) CurrentWeapon->Throw();
 		
 		CurrentWeapon = Weapon;
-		APawn* Pawn =  Cast<APawn>(GetOwner());
-		CurrentWeapon->SetInstigator(Pawn);
-		if (Pawn)
-		{
-			AController* PlayerController = Pawn->GetController();
-			PlayerController ? CurrentWeapon->SetOwner(Pawn->GetController()) : CurrentWeapon->SetOwner(GetOwner());
-		}
+
+		SetInstigatorAndOwnerToWeapon();
 		
-		if (GetNetMode() == NM_Standalone) {
-			OnRep_CurrentWeapon();
-		}
+		if (GetNetMode() == NM_Standalone) OnRep_CurrentWeapon();
 	}
 }

@@ -44,12 +44,12 @@ public:
 	// [Server] Use
 	/** Function that handles firing */
 	UFUNCTION(Reliable, Server, WithValidation)
-		void ServerUse();
+		void Server_Use();
 
 	// [Server] StopUse
 	/** Function that handles stop firing */
 	UFUNCTION(Reliable, Server, WithValidation)
-        void ServerStopUse();
+        void Server_StopUse();
 
 	bool CanBeUsed() const;
 

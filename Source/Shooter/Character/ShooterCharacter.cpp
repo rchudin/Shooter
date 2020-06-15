@@ -67,10 +67,10 @@ AShooterCharacter::AShooterCharacter()
 
 	// Weapon Manager
 	WeaponManager = CreateDefaultSubobject<UWeaponManager>(TEXT("WeaponManager"));
-	WeaponManager->AttachWeapon =([&](AActor* Actor)
-	{
-		AttachWeapon(Actor);
-	});
+	WeaponManager->SetAttachWeaponFunction([&](AActor* Actor, const FAttachmentTransformRules Rules)
+    {
+		Actor->AttachToComponent(GetMesh(), Rules, "skt_weapon");
+    });
 }
 
 // Called when the game starts or when spawned
@@ -207,19 +207,6 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 void AShooterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-}
-
-void AShooterCharacter::AttachWeapon(AActor* Actor)
-{
-	const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
-	if (GetMesh())
-	{
-		Actor->AttachToComponent(GetMesh(), Rules, "skt_weapon");
-	}
-	else
-	{
-		Actor->AttachToComponent(GetRootComponent(), Rules);
-	}
 }
 
 
