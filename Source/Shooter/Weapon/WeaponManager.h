@@ -44,7 +44,7 @@ protected:
 
 	void SetUpdatingWidgetInWeapon();
 	
-	void RemoveUpdatingWidgetInWeapon() const { if (CurrentWeapon) CurrentWeapon->RemoveUpdatingWidget(); }
+	void RemoveUpdatingWidgetInWeapon() const;
 
 public:	
 	// Sets default values for this component's properties

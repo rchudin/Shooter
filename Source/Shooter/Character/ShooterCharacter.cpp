@@ -103,12 +103,17 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 	/* TEMPORARY */
 }
 
+void AShooterCharacter::UnPossessed()
+{
+	WeaponManager->RemoveWidgets();
+}
+
 void AShooterCharacter::OnRep_Controller()
 {
 	UE_LOG(LogTemp, Log, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
 	Super::OnRep_Controller();
 
-	WeaponManager->CreateWidgets();
+	GetController() ? WeaponManager->CreateWidgets() : WeaponManager->RemoveWidgets();
 }
 
 void AShooterCharacter::ActivateFirstPersonCamera() const

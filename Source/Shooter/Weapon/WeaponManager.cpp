@@ -44,7 +44,11 @@ void UWeaponManager::CreateWidgets()
 			{
 				AmmoWidget = CreateWidget<UAmmoWidget>(GetWorld(), AmmoWidgetClass);
 			}
-			if (AmmoWidget) AmmoWidget->AddToViewport();
+			if (AmmoWidget)
+			{
+				AmmoWidget->AddToViewport();
+				SetUpdatingWidgetInWeapon();
+			}
 		}
 	}
 }
@@ -89,6 +93,11 @@ void UWeaponManager::SetUpdatingWidgetInWeapon()
             }
         });
 	}
+}
+
+void UWeaponManager::RemoveUpdatingWidgetInWeapon() const
+{
+	if (CurrentWeapon) CurrentWeapon->RemoveUpdatingWidget();
 }
 
 

@@ -9,7 +9,6 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Footprints.h"
-#include "Shooter/UI/InGameHud.h"
 #include "Shooter/Weapon/WeaponManager.h"
 #include "ShooterCharacter.generated.h"
 
@@ -62,6 +61,8 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void PossessedBy(AController * NewController) override;
+
+	virtual void UnPossessed() override;
 
 	virtual void OnRep_Controller() override;
 
