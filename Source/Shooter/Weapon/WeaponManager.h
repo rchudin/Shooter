@@ -15,7 +15,7 @@ class SHOOTER_API UWeaponManager : public UActorComponent
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "Widget", meta = (AllowPrivateAccess = "true"))
-            TSubclassOf<UUserWidget> CrosshairWidgetClass;
+		TSubclassOf<UUserWidget> CrosshairWidgetClass;
 
 	UPROPERTY()
         class UUserWidget* CrosshairWidget;
@@ -47,10 +47,14 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void SetUpdatingWidgetInWeapon();
+
+	void SetGetViewPointLambdaInWeapon() const;
 	
 	void RemoveUpdatingWidgetInWeapon() const;
 
 	void SetInstigatorAndOwnerToWeapon() const;
+
+	TFunction<void (FVector&, FVector&)>  GetViewPointLambda;
 
 public:	
 	// Sets default values for this component's properties
@@ -71,4 +75,6 @@ public:
     FORCEINLINE class AWeapon* GetCurrentWeapon() const { return CurrentWeapon; }
 
 	FORCEINLINE void SetAttachWeaponToHandFunction(const TFunction<void(AActor*, FAttachmentTransformRules)> F) { AttachWeaponToHandFunction = F; };
+
+	FORCEINLINE void SetGetViewPointLambda(TFunction<void (FVector&, FVector&)>  F) { GetViewPointLambda = F; }
 };

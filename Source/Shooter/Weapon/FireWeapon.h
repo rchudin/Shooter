@@ -19,6 +19,9 @@ class SHOOTER_API AFireWeapon : public AWeapon
     UPROPERTY(EditDefaultsOnly, Category = Animation) 
         class UAnimationAsset* ReloadAnimation;
 
+    UPROPERTY(EditDefaultsOnly, Category = Mesh)
+        FName MuzzleSocket;
+
     UFUNCTION()
         void OnRep_CurrentAmmo() const { CurrentAmmo.OnUpdate(); }
 	
@@ -32,16 +35,24 @@ public:
         TSubclassOf<class APawn> Projectile;
 
     virtual bool CanBeUsed() const override;
+
+    virtual void Detach() override;
     
     virtual void RemoveUpdatingWidget() override;
+
+    void SetGetViewPointLambda(TFunction<void (FVector&, FVector&)>  F) { GetViewPointLambda = F; }
 
     void SetOnCurrentAmmoUpdateFunction(TFunction<void(const int& Value)> F) {CurrentAmmo.UpdateWidget = F; CurrentAmmo.OnUpdate(); }
 	
     void SetOnTotalAmmoUpdateFunction(TFunction<void(const int& Value)> F) {TotalAmmo.UpdateWidget = F; TotalAmmo.OnUpdate(); }
+
+    void ForgetGetViewPointLambda() { GetViewPointLambda = nullptr; };
 	
 protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+    TFunction<void (FVector&, FVector&)>  GetViewPointLambda;
+    
     UPROPERTY(EditAnywhere, Category = Stats)
         bool AutoFire;
     
@@ -57,7 +68,11 @@ protected:
     UPROPERTY(EditAnywhere, Category = Stats)
         int MaxTotalAmmo;
 
+    virtual void OnRep_Instigator() override;
+    
     virtual void  RestoreToDefaultStats() override;
+
+    virtual void GetViewPoint(FVector& Out_Location, FVector& Out_Forward) const override;
     
     virtual void Use() override;
 

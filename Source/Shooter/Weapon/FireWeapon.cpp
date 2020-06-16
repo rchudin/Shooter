@@ -2,8 +2,7 @@
 
 
 #include "FireWeapon.h"
-#include "DrawDebugHelpers.h"
-#include "GameModeInfoCustomizer.h"
+
 
 
 
@@ -35,13 +34,11 @@ void AFireWeapon::RestoreToDefaultStats()
 }
 
 
-bool AFireWeapon::CanBeUsed() const
+void AFireWeapon::OnRep_Instigator()
 {
-    if (CurrentAmmo <= 0) {
-        return false;
-    }
+    Super::OnRep_Instigator();
 
-    return true;
+    ForgetGetViewPointLambda();
 }
 
 
@@ -52,9 +49,41 @@ void AFireWeapon::RemoveUpdatingWidget()
 }
 
 
+void AFireWeapon::Detach()
+{
+    Super::Detach();
+    
+    ForgetGetViewPointLambda();
+}
+
+
+void AFireWeapon::GetViewPoint(FVector& Out_Location, FVector& Out_Forward) const
+{
+    if (GetViewPointLambda)
+    {
+        GetViewPointLambda(Out_Location, Out_Forward);
+    }
+    else
+    {
+        Out_Location = GetMesh()->GetSocketLocation(MuzzleSocket);
+        Out_Forward = GetMesh()->GetSocketRotation(MuzzleSocket).Vector();
+    }
+}
+
+
+bool AFireWeapon::CanBeUsed() const
+{
+    if (CurrentAmmo <= 0) {
+        return false;
+    }
+
+    return true;
+}
+
+
 void AFireWeapon::Use()
 {
-    if (CanBeUsed()) {
+    if (CanBeUsed() && HasAuthority()) {
         UE_LOG(LogTemp, Log, TEXT("%s: Use Weapon"), HasAuthority()?TEXT("Server"):TEXT("Client"));
         
         UWorld* World = GetWorld();
@@ -91,7 +120,10 @@ void AFireWeapon::Fire()
         
         Scatter = !Scatter;
 
-        if (GetNetMode() == NM_Standalone || GetLocalRole() == ROLE_Authority)
+
+        
+        if (GetNetMode() == NM_Standalone || 
+            GetNetMode() == NM_ListenServer && GetLocalRole() == ROLE_Authority)
         {
             PlayUseEffects();
         }
@@ -101,16 +133,18 @@ void AFireWeapon::Fire()
 
 void AFireWeapon::PlayUseEffects()
 {
+    const FString LocalRoleEnumString = UEnum::GetValueAsString(GetLocalRole());
+    UE_LOG(LogTemp, Log, TEXT("%s: %s  %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__), *LocalRoleEnumString);
+    
     FHitResult OutHit;
     FVector Start;
     FVector End;
     CalculateTrajectory(Start, End);
     Trace(OutHit, Start, End);
 
-    Trace(OutHit, Start, End);
     if (GetMesh())
     {
-        const FVector NewStart = GetMesh()->GetSocketLocation("skt_muzzle");
+        const FVector NewStart = GetMesh()->GetSocketLocation(MuzzleSocket);
         if (!NewStart.IsZero())
         {
             Start = NewStart;

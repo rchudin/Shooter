@@ -1,8 +1,7 @@
 // Copyright © 2020 ruslanchudin.com
 
 #include "Weapon.h"
-#include "Shooter/Character/ShooterCharacter.h"
-
+#include "DrawDebugHelpers.h"
 
 
 AWeapon* AWeapon::CreateWeapon(UWorld* World, const TSubclassOf<AWeapon>& WeaponClass, const FVector& Location)
@@ -46,13 +45,14 @@ void AWeapon::OnRep_Instigator()
 }
 
 
-void AWeapon::Throw()
+void AWeapon::Detach()
 {
 	RemoveUpdatingWidget();
 	SetOwner(nullptr);
 	SetInstigator(nullptr);
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 }
+
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -79,39 +79,18 @@ void AWeapon::Trace(FHitResult& OutHit, FVector& Start, FVector& End) const
 }
 
 
-FVector AWeapon::GetForwardVector() const
+void AWeapon::GetViewPoint(FVector& Out_Location, FVector& Out_Forward) const
 {
-	AShooterCharacter* Character = Cast<AShooterCharacter>(GetInstigator());
-	FVector ForwardVector;
-	if (Character)
-	{
-		if (Character->GetController())
-		{
-			UCameraComponent* Camera = Character ? Character->GetFollowCamera(): nullptr;
-			ForwardVector = Camera ? Camera->GetForwardVector() : FVector();
-		}
-		else
-		{
-			ForwardVector = Character->GetBaseAimRotation().RotateVector(FVector(1.f,0.f,0.f));
-		}
-	}
-	
-	return ForwardVector;
-}
-
-
-FVector AWeapon::GetStartPoint() const
-{
-	AShooterCharacter* Character = Cast<AShooterCharacter>(GetInstigator());
-	UCameraComponent* Camera = Character ? Character->GetFollowCamera(): nullptr;
-	return Camera ? Camera->GetComponentLocation() : FVector();
+	Out_Location = GetActorLocation();
+	Out_Forward = GetActorForwardVector();
 }
 
 
 void AWeapon::CalculateTrajectory(FVector& Start, FVector& End) const
 {
-	const FVector ForwardVector = GetForwardVector();
-	Start = GetStartPoint();
+	FVector ForwardVector;
+	GetViewPoint(Start, ForwardVector);
+	
 	End = ((ForwardVector * UseRange) + Start);
 
 	UE_LOG(LogTemp, Log, TEXT("%s: Fire Start(x:%f, y:%f , z:%f)"), HasAuthority()?TEXT("Server"):TEXT("Client"),  Start.X, Start.Y, Start.Z)

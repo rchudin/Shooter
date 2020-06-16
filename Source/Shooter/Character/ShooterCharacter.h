@@ -56,6 +56,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 
+	void GetPlayerViewPoint(FVector& Out_Location, FVector& Out_Forward) const;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

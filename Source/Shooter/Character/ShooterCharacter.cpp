@@ -71,6 +71,10 @@ AShooterCharacter::AShooterCharacter()
     {
 		Actor->AttachToComponent(GetMesh(), Rules, "skt_weapon");
     });
+	WeaponManager->SetGetViewPointLambda([&](FVector& Out_Location, FVector& Out_Forward)
+	{
+		GetPlayerViewPoint(Out_Location,Out_Forward);
+	});
 }
 
 // Called when the game starts or when spawned
@@ -115,6 +119,14 @@ void AShooterCharacter::OnRep_Controller()
 
 	GetController() ? WeaponManager->CreateWidgets() : WeaponManager->RemoveWidgets();
 }
+
+
+void AShooterCharacter::GetPlayerViewPoint(FVector& Out_Location, FVector& Out_Forward) const
+{
+	Out_Location = GetFollowCamera() ? GetFollowCamera()->GetComponentLocation() : GetActorLocation();
+	Out_Forward = GetController() ? GetController()->GetControlRotation().Vector() : GetBaseAimRotation().Vector(); 
+}
+
 
 void AShooterCharacter::ActivateFirstPersonCamera() const
 {

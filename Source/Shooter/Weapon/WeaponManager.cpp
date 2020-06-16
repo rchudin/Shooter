@@ -32,8 +32,7 @@ void UWeaponManager::OnRep_CurrentWeapon()
 void UWeaponManager::CreateWidgets()
 {
 	if (GetNetMode() == NM_Standalone ||
-		GetOwnerRole() == ROLE_AutonomousProxy ||
-		GetNetMode() == NM_ListenServer && GetOwnerRole() != ROLE_Authority)
+		GetOwnerRole() == ROLE_AutonomousProxy)
 	{
 		if(CrosshairWidgetClass && !CrosshairWidget)
 		{
@@ -97,6 +96,15 @@ void UWeaponManager::SetUpdatingWidgetInWeapon()
 	}
 }
 
+void UWeaponManager::SetGetViewPointLambdaInWeapon() const
+{
+	auto FWeapon = Cast<AFireWeapon>(CurrentWeapon);
+	if (FWeapon)
+	{
+		FWeapon->SetGetViewPointLambda(GetViewPointLambda);
+	}
+}
+
 
 void UWeaponManager::RemoveUpdatingWidgetInWeapon() const
 {
@@ -147,6 +155,8 @@ void UWeaponManager::AttachCurrentWeaponToHand()
 		}
 		
 		SetUpdatingWidgetInWeapon();
+
+		SetGetViewPointLambdaInWeapon();
 	}
 }
 
@@ -157,7 +167,7 @@ void UWeaponManager::TakeWeapon(AWeapon* Weapon)
 	
 	if (GetOwner()->HasAuthority() && Weapon)
 	{
-		if (CurrentWeapon) CurrentWeapon->Throw();
+		if (CurrentWeapon) CurrentWeapon->Detach();
 		
 		CurrentWeapon = Weapon;
 

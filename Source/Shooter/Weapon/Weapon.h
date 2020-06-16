@@ -52,7 +52,7 @@ public:
 
 	virtual void RemoveUpdatingWidget() { };
 
-	void Throw();
+	virtual void Detach();
 
 	/** Returns Mesh sub object **/
 	FORCEINLINE class USkeletalMeshComponent* GetMesh() const { return Mesh; }
@@ -88,9 +88,7 @@ protected:
 
 	void Trace(FHitResult& OutHit, FVector& Start, FVector& End) const;
 
-	FVector GetForwardVector() const;
-
-	FVector GetStartPoint() const;
+	virtual void GetViewPoint(FVector& Out_Location, FVector& Out_Forward) const;
 	
 	void CalculateTrajectory(FVector& Start, FVector& End) const;
 	
