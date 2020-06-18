@@ -18,7 +18,7 @@ struct FCounter
 	
 	bool operator==(const FCounter& Other) const { return Count == Other.Count; }
 	bool operator==(const int& Other) const { return Count == Other; }
-	bool operator!=(const FCounter& Other) const { return !(*this == Other); }
+	bool operator!=(const FCounter& Other) const { return Count != Other.Count; }
 	bool operator!=(const int& Other) const { return Count != Other; }
 	
 	bool operator<=(const FCounter& Other) const { return Count <= Other.Count; }

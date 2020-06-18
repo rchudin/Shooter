@@ -31,6 +31,9 @@ void UWeaponManager::OnRep_CurrentWeapon()
 
 void UWeaponManager::CreateWidgets()
 {
+	const FString LocalRoleEnumString = UEnum::GetValueAsString(GetOwnerRole());
+    UE_LOG(LogTemp, Log, TEXT("%s: %s  %s"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__), *LocalRoleEnumString);
+	
 	if (GetNetMode() == NM_Standalone ||
 		GetOwnerRole() == ROLE_AutonomousProxy)
 	{
@@ -121,6 +124,16 @@ void UWeaponManager::UseWeapon() const
 void UWeaponManager::StopUseWeapon() const
 {
 	if (CurrentWeapon) CurrentWeapon->Server_StopUse();
+}
+
+
+void UWeaponManager::Reload() const
+{
+	if (CurrentWeapon)
+	{
+		auto FWeapon = Cast<AFireWeapon>(CurrentWeapon);
+		FWeapon->Server_Reload();
+	}
 }
 
 

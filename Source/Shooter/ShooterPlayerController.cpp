@@ -43,7 +43,7 @@ void AShooterPlayerController::LoadWeapon() const
             if (WeaponInstanceData)
             {
                 const FString ContextString(TEXT("Weapon Instance"));
-                FWeaponInstance* WeaponInstance = WeaponInstanceData->FindRow<FWeaponInstance>(FName(TEXT("M16")), ContextString, true);
+                FWeaponInstance* WeaponInstance = WeaponInstanceData->FindRow<FWeaponInstance>(FName(TEXT("AK74")), ContextString, true);
                 if (WeaponInstance) PState->SetDefaultMainWeapon(WeaponInstance);
             }
         }

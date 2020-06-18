@@ -2,7 +2,7 @@
 
 
 #include "FireWeapon.h"
-
+#include "GameFramework/Character.h"
 
 
 
@@ -13,6 +13,7 @@ void AFireWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 
     DOREPLIFETIME_CONDITION(AFireWeapon, TotalAmmo, COND_OwnerOnly);
     DOREPLIFETIME_CONDITION(AFireWeapon, CurrentAmmo, COND_OwnerOnly);
+    DOREPLIFETIME(AFireWeapon, Reloading);
 }
 
 
@@ -22,6 +23,7 @@ AFireWeapon::AFireWeapon()
     MaxTotalAmmo = 180;
     UsageTimePeriod = 0.5f;
     UseRange = 10000.f;
+    ReloadTime =  1.7f;
 }
 
 
@@ -39,6 +41,15 @@ void AFireWeapon::OnRep_Instigator()
     Super::OnRep_Instigator();
 
     ForgetGetViewPointLambda();
+}
+
+
+void AFireWeapon::OnRep_Reloading()
+{
+    if (Reloading)
+    {
+        PlayReloadingEffects();
+    }
 }
 
 
@@ -73,9 +84,9 @@ void AFireWeapon::GetViewPoint(FVector& Out_Location, FVector& Out_Forward) cons
 
 bool AFireWeapon::CanBeUsed() const
 {
-    if (CurrentAmmo <= 0) {
-        return false;
-    }
+    if (CurrentAmmo <= 0) return false;
+
+    if (Reloading) return false;
 
     return true;
 }
@@ -123,7 +134,7 @@ void AFireWeapon::Fire()
 
         
         if (GetNetMode() == NM_Standalone || 
-            GetNetMode() == NM_ListenServer && GetLocalRole() == ROLE_Authority)
+            (GetNetMode() == NM_ListenServer && GetLocalRole() == ROLE_Authority))
         {
             PlayUseEffects();
         }
@@ -153,10 +164,58 @@ void AFireWeapon::PlayUseEffects()
                 FRotator Rotate =  UKismetMathLibrary::FindLookAtRotation(Start, OutHit.Location);
             }*/
         }
-        if (FireAnimation) {
+        if (GetMesh() && FireAnimation) {
             GetMesh()->PlayAnimation(FireAnimation, false);
         }
     }
         
     DrawDebugFireLine(OutHit, Start, End);
+}
+
+
+// [Server] Reload
+void AFireWeapon::Server_Reload_Implementation()
+{
+    Reload();
+}
+
+
+void AFireWeapon::Reload()
+{
+    UE_LOG(LogTemp, Log, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
+    
+    UWorld* World = GetWorld();
+    
+    if (World && HasAuthority() && TotalAmmo > 0 && CurrentAmmo != MaxCurrentAmmo  &&
+        (!ReloadingTimerHandle.IsValid() || !GetWorldTimerManager().IsTimerActive(ReloadingTimerHandle)))
+        {
+        
+        const int AppendAmmo = (TotalAmmo < MaxCurrentAmmo ? TotalAmmo : MaxCurrentAmmo) - CurrentAmmo;
+        TotalAmmo -= AppendAmmo;
+        Reloading = true;
+        FTimerDelegate TimerCallback;
+        TimerCallback.BindLambda([&, AppendAmmo]
+        {
+            CurrentAmmo += AppendAmmo;
+            Reloading = false;
+        });
+        World->GetTimerManager().SetTimer(ReloadingTimerHandle, TimerCallback, ReloadTime, false);
+        if (GetNetMode() == NM_Standalone || 
+               (GetNetMode() == NM_ListenServer && GetLocalRole() == ROLE_Authority))
+        {
+            PlayReloadingEffects();
+        }
+    }
+}
+
+
+void AFireWeapon::PlayReloadingEffects()
+{
+    if (GetMesh() && ReloadAnimation) GetMesh()->PlayAnimation(ReloadAnimation, false);
+
+    ACharacter* Character = Cast<ACharacter>(GetInstigator());
+    if (Character)
+    {
+        Character->PlayAnimMontage(CharacterReloadAnimMontage);
+    }
 }

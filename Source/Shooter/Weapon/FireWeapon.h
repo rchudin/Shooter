@@ -13,11 +13,17 @@ class SHOOTER_API AFireWeapon : public AWeapon
 {
 	GENERATED_BODY()
 
+    UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_Reloading, Category = Animation, meta = (AllowPrivateAccess = "true"))
+        bool Reloading;
+    
     UPROPERTY(EditDefaultsOnly, Category = Animation) 
         class UAnimationAsset* FireAnimation;
 
     UPROPERTY(EditDefaultsOnly, Category = Animation) 
         class UAnimationAsset* ReloadAnimation;
+
+    UPROPERTY(EditDefaultsOnly, Category = Animation)
+        class UAnimMontage* CharacterReloadAnimMontage;
 
     UPROPERTY(EditDefaultsOnly, Category = Mesh)
         FName MuzzleSocket;
@@ -27,13 +33,18 @@ class SHOOTER_API AFireWeapon : public AWeapon
 	
     UFUNCTION()
         void OnRep_TotalAmmo() const { TotalAmmo.OnUpdate(); }
+
+    UFUNCTION()
+        void OnRep_Reloading();
+    
 public:
     AFireWeapon();
     
-    /** Projectile class to spawn */
-    UPROPERTY(EditDefaultsOnly, Category = Projectile)
-        TSubclassOf<class APawn> Projectile;
-
+    // [Server] Reload
+    /** Function that handles Reloading */
+    UFUNCTION(Reliable, Server)
+        void Server_Reload();
+    
     virtual bool CanBeUsed() const override;
 
     virtual void Detach() override;
@@ -52,6 +63,9 @@ protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
     TFunction<void (FVector&, FVector&)>  GetViewPointLambda;
+
+    UPROPERTY()
+        FTimerHandle ReloadingTimerHandle;
     
     UPROPERTY(EditAnywhere, Category = Stats)
         bool AutoFire;
@@ -68,6 +82,9 @@ protected:
     UPROPERTY(EditAnywhere, Category = Stats)
         int MaxTotalAmmo;
 
+    UPROPERTY(EditAnywhere, Category = Stats)
+        float ReloadTime;
+    
     virtual void OnRep_Instigator() override;
     
     virtual void  RestoreToDefaultStats() override;
@@ -76,7 +93,11 @@ protected:
     
     virtual void Use() override;
 
-    virtual  void PlayUseEffects() override;
+    virtual void PlayUseEffects() override;
+
+    virtual void PlayReloadingEffects();
 
     void Fire();
+    
+    void Reload();
 };

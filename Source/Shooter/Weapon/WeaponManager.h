@@ -68,6 +68,8 @@ public:
 	
 	void StopUseWeapon() const;
 
+	void Reload() const;
+
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		void TakeWeapon(AWeapon* Weapon);
 

@@ -72,6 +72,8 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void Reload();
 	
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
