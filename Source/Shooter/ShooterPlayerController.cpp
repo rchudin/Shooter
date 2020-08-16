@@ -11,14 +11,14 @@ AShooterPlayerController::AShooterPlayerController()
 void AShooterPlayerController::BeginPlay()
 {
     Super::BeginPlay();
-    
+
     SetFirstPersonViewingAngle();
 }
 
 void AShooterPlayerController::BeginSpectatingState()
 {
     Super::BeginSpectatingState();
-    
+
     LoadWeapon();
 }
 
@@ -35,7 +35,7 @@ void AShooterPlayerController::LoadWeapon() const
     if (HasAuthority())
     {
         UE_LOG(LogTemp, Warning, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-        
+
         AShooterPlayerState* PState = GetPlayerState<AShooterPlayerState>();
         if (PState)
         {
@@ -43,7 +43,8 @@ void AShooterPlayerController::LoadWeapon() const
             if (WeaponInstanceData)
             {
                 const FString ContextString(TEXT("Weapon Instance"));
-                FWeaponInstance* WeaponInstance = WeaponInstanceData->FindRow<FWeaponInstance>(FName(TEXT("AK74")), ContextString, true);
+                FWeaponInstance* WeaponInstance = WeaponInstanceData->FindRow<FWeaponInstance>(
+                    FName(TEXT("AK74")), ContextString, true);
                 if (WeaponInstance) PState->SetDefaultMainWeapon(WeaponInstance);
             }
         }

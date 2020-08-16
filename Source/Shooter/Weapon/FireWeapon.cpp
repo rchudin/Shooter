@@ -3,7 +3,8 @@
 
 #include "FireWeapon.h"
 #include "GameFramework/Character.h"
-
+#include "Kismet/GameplayStatics.h"
+#include "Shooter/FunctionLibrary.h"
 
 
 
@@ -24,6 +25,7 @@ AFireWeapon::AFireWeapon()
     UsageTimePeriod = 0.5f;
     UseRange = 10000.f;
     ReloadTime =  1.7f;
+    Damage = 50.f;
 }
 
 
@@ -95,7 +97,7 @@ bool AFireWeapon::CanBeUsed() const
 void AFireWeapon::Use()
 {
     if (CanBeUsed() && HasAuthority()) {
-        UE_LOG(LogTemp, Log, TEXT("%s: Use Weapon"), HasAuthority()?TEXT("Server"):TEXT("Client"));
+        UE_LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Use weapon"));
         
         UWorld* World = GetWorld();
         if (World) {
@@ -122,16 +124,15 @@ void AFireWeapon::Fire()
 {
     if (HasAuthority())
     {
-        FHitResult OutHit;
         FVector Start;
         FVector End;
         CalculateTrajectory(Start, End);
-        Trace(OutHit, Start, End);
+        FHitResult OutHit = Trace(Start, End);
         --CurrentAmmo;
         
         Scatter = !Scatter;
 
-
+        UGameplayStatics::ApplyPointDamage(OutHit.GetActor(), Damage, End -Start, OutHit, GetInstigatorController(), this, nullptr);
         
         if (GetNetMode() == NM_Standalone || 
             (GetNetMode() == NM_ListenServer && GetLocalRole() == ROLE_Authority))
@@ -145,13 +146,13 @@ void AFireWeapon::Fire()
 void AFireWeapon::PlayUseEffects()
 {
     const FString LocalRoleEnumString = UEnum::GetValueAsString(GetLocalRole());
-    UE_LOG(LogTemp, Log, TEXT("%s: %s  %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__), *LocalRoleEnumString);
+    UE_LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Play Use Effects"));
+    /*UE_LOG(LogTemp, Log, TEXT("%s: %s  %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__), *LocalRoleEnumString);*/
     
-    FHitResult OutHit;
     FVector Start;
     FVector End;
     CalculateTrajectory(Start, End);
-    Trace(OutHit, Start, End);
+    FHitResult OutHit = Trace(Start, End);
 
     if (GetMesh())
     {

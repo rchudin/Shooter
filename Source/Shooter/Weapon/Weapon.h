@@ -62,6 +62,9 @@ public:
 
 	
 protected:
+	UPROPERTY(EditAnywhere, Category = Stats)
+        float Damage;
+	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	virtual void RestoreToDefaultStats() {}
@@ -86,7 +89,7 @@ protected:
 	
 	virtual void OnRep_Instigator() override;
 
-	void Trace(FHitResult& OutHit, FVector& Start, FVector& End) const;
+	FHitResult Trace(const FVector& Start, const FVector& End) const;
 
 	virtual void GetViewPoint(FVector& Out_Location, FVector& Out_Forward) const;
 	

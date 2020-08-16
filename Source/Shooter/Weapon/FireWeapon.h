@@ -71,10 +71,10 @@ protected:
         bool AutoFire;
     
     UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_CurrentAmmo, Category = Stats, meta = (AllowPrivateAccess = "true"))
-        FCounter CurrentAmmo;
+        FCounterInt CurrentAmmo;
 	
     UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_TotalAmmo, Category = Stats,  meta = (AllowPrivateAccess = "true"))
-        FCounter TotalAmmo;
+        FCounterInt TotalAmmo;
 
     UPROPERTY(EditAnywhere, Category = Stats)
         int MaxCurrentAmmo;
@@ -87,7 +87,7 @@ protected:
     
     virtual void OnRep_Instigator() override;
     
-    virtual void  RestoreToDefaultStats() override;
+    virtual void RestoreToDefaultStats() override;
 
     virtual void GetViewPoint(FVector& Out_Location, FVector& Out_Forward) const override;
     

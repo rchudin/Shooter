@@ -2,6 +2,7 @@
 
 #include "Weapon.h"
 #include "DrawDebugHelpers.h"
+#include "Shooter/FunctionLibrary.h"
 
 
 AWeapon* AWeapon::CreateWeapon(UWorld* World, const TSubclassOf<AWeapon>& WeaponClass, const FVector& Location)
@@ -34,6 +35,8 @@ AWeapon::AWeapon()
 		Mesh->SetupAttachment(RootComponent);
 		Mesh->SetWorldLocationAndRotation(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f));
 	}
+
+	Damage = 10.f;
 }
 
 
@@ -62,10 +65,9 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 }
 
 
-void AWeapon::Trace(FHitResult& OutHit, FVector& Start, FVector& End) const
+FHitResult AWeapon::Trace(const FVector& Start, const FVector& End) const
 {
-	OutHit = FHitResult(ForceInit);
-
+	FHitResult OutHit = FHitResult(ForceInit);
 	FCollisionQueryParams TraceParams(FName(TEXT("Fire trace")));
 	TraceParams.bReturnPhysicalMaterial = true;
 	TraceParams.AddIgnoredActor(this);
@@ -76,6 +78,7 @@ void AWeapon::Trace(FHitResult& OutHit, FVector& Start, FVector& End) const
 	{
 		World->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, TraceParams);
 	}
+	return OutHit;
 }
 
 
@@ -93,8 +96,8 @@ void AWeapon::CalculateTrajectory(FVector& Start, FVector& End) const
 	
 	End = ((ForwardVector * UseRange) + Start);
 
-	UE_LOG(LogTemp, Log, TEXT("%s: Fire Start(x:%f, y:%f , z:%f)"), HasAuthority()?TEXT("Server"):TEXT("Client"),  Start.X, Start.Y, Start.Z)
-    UE_LOG(LogTemp, Log, TEXT("%s: Fire End(x:%f, y:%f , z:%f)"), HasAuthority()?TEXT("Server"):TEXT("Client"),   End.X, End.Y, End.Z)
+	UE_LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Fire Start(x:%f, y:%f , z:%f)"), Start.X, Start.Y, Start.Z);
+	UE_LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Fire End(x:%f, y:%f , z:%f)"), End.X, End.Y, End.Z);
 }
 
 
