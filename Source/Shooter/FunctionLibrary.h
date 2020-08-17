@@ -8,7 +8,7 @@
 
 
 
-#define  UE_LOG_INSTANCE(CategoryName, Verbosity, IsServer, Format, ...)\
+#define  LOG_INSTANCE(CategoryName, Verbosity, IsServer, Format, ...)\
 {\
 UE_LOG(CategoryName, Verbosity, TEXT("(%s) " Format), IsServer?TEXT("Server"):TEXT("Client"), ##__VA_ARGS__);\
 }

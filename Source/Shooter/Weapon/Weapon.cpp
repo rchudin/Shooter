@@ -68,6 +68,13 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 FHitResult AWeapon::Trace(const FVector& Start, const FVector& End) const
 {
 	FHitResult OutHit = FHitResult(ForceInit);
+
+	
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AddObjectTypesToQuery(ECC_WorldStatic);
+	ObjectParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+	ObjectParams.AddObjectTypesToQuery(ECC_Pawn);
+	
 	FCollisionQueryParams TraceParams(FName(TEXT("Fire trace")));
 	TraceParams.bReturnPhysicalMaterial = true;
 	TraceParams.AddIgnoredActor(this);
@@ -76,7 +83,8 @@ FHitResult AWeapon::Trace(const FVector& Start, const FVector& End) const
 	UWorld* World = GetWorld();
 	if (World)
 	{
-		World->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, TraceParams);
+		/*World->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, TraceParams);*/
+		World->LineTraceSingleByObjectType(OutHit, Start, End, ObjectParams, TraceParams);
 	}
 	return OutHit;
 }
@@ -96,8 +104,8 @@ void AWeapon::CalculateTrajectory(FVector& Start, FVector& End) const
 	
 	End = ((ForwardVector * UseRange) + Start);
 
-	UE_LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Fire Start(x:%f, y:%f , z:%f)"), Start.X, Start.Y, Start.Z);
-	UE_LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Fire End(x:%f, y:%f , z:%f)"), End.X, End.Y, End.Z);
+	LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Fire Start(x:%f, y:%f , z:%f)"), Start.X, Start.Y, Start.Z);
+	LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Fire End(x:%f, y:%f , z:%f)"), End.X, End.Y, End.Z);
 }
 
 

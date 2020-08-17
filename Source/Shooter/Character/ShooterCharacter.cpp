@@ -4,6 +4,7 @@
 #include "ShooterCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Shooter/FunctionLibrary.h"
 #include "Shooter/ShooterPlayerController.h"
 #include "Shooter/ShooterPlayerState.h"
 
@@ -65,6 +66,9 @@ AShooterCharacter::AShooterCharacter()
 	RightFootArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("RightFootArrow"));
 	RightFootArrow->SetupAttachment(GetMesh(), FName("skt_footprint_r"));
 
+	//Health component
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+	
 	// Weapon Manager
 	WeaponManager = CreateDefaultSubobject<UWeaponManager>(TEXT("WeaponManager"));
 	WeaponManager->SetAttachWeaponToHandFunction([&](AActor* Actor, const FAttachmentTransformRules Rules)
@@ -85,9 +89,10 @@ void AShooterCharacter::BeginPlay()
 
 void AShooterCharacter::PossessedBy(AController* NewController)
 {
-	UE_LOG(LogTemp, Log, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
+	LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("%s"), TEXT(__FUNCTION__));
 	Super::PossessedBy(NewController);
 
+	HealthComponent->CreateWidgets();
 	WeaponManager->CreateWidgets();
 	
 	/* TEMPORARY */
@@ -109,15 +114,25 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 
 void AShooterCharacter::UnPossessed()
 {
+	HealthComponent->RemoveWidgets();
 	WeaponManager->RemoveWidgets();
 }
 
 void AShooterCharacter::OnRep_Controller()
 {
-	UE_LOG(LogTemp, Log, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
+	LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("%s"), TEXT(__FUNCTION__))
 	Super::OnRep_Controller();
 
-	GetController() ? WeaponManager->CreateWidgets() : WeaponManager->RemoveWidgets();
+	if (GetController())
+	{
+		HealthComponent->CreateWidgets();
+		WeaponManager->CreateWidgets();
+	}
+	else
+	{
+		HealthComponent->RemoveWidgets();
+		WeaponManager->RemoveWidgets();
+	}
 }
 
 

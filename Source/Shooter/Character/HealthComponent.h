@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Shooter/Core/Counter.h"
+#include "Shooter/UI/Widget/HealthWidget.h"
+
 
 #include "HealthComponent.generated.h"
 
@@ -15,11 +16,21 @@ class SHOOTER_API UHealthComponent : public UActorComponent
 	GENERATED_BODY()
 
 	UFUNCTION()
-        void OnRep_Health() const { Health.OnUpdate(); }
+        void OnRep_Health() const;
+
+	UPROPERTY(EditAnywhere, Category = "Widget", meta = (AllowPrivateAccess = "true"))
+        TSubclassOf<UHealthWidget> HealthWidgetClass;
+
+	UPROPERTY()
+        class UHealthWidget *HealthWidget;
 	
 public:	
 	// Sets default values for this component's properties
 	UHealthComponent();
+
+	void CreateWidgets();
+
+	void RemoveWidgets() const;
 
 protected:
 	// Called when the game starts
@@ -28,7 +39,7 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_Health, Category = Health,  meta = (AllowPrivateAccess = "true"))
-        FCounterFloat Health;
+        float Health;
 	
 	UPROPERTY(EditAnywhere, Category = Health)
         float MaxHealth;

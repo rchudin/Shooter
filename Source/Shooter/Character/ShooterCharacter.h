@@ -10,6 +10,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Footprints.h"
 #include "Shooter/Weapon/WeaponManager.h"
+#include "Shooter/Character/HealthComponent.h"
 #include "ShooterCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -40,6 +41,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
 		class UArrowComponent* LeftFootArrow;
 
+	/** Health component */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = "true"))
+        class UHealthComponent *HealthComponent;
+	
 	/** Weapon manager*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 		class UWeaponManager* WeaponManager;

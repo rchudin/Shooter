@@ -25,7 +25,7 @@ AFireWeapon::AFireWeapon()
     UsageTimePeriod = 0.5f;
     UseRange = 10000.f;
     ReloadTime =  1.7f;
-    Damage = 50.f;
+    Damage = 20.f;
 }
 
 
@@ -97,7 +97,7 @@ bool AFireWeapon::CanBeUsed() const
 void AFireWeapon::Use()
 {
     if (CanBeUsed() && HasAuthority()) {
-        UE_LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Use weapon"));
+        LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Use weapon"));
         
         UWorld* World = GetWorld();
         if (World) {
@@ -146,7 +146,7 @@ void AFireWeapon::Fire()
 void AFireWeapon::PlayUseEffects()
 {
     const FString LocalRoleEnumString = UEnum::GetValueAsString(GetLocalRole());
-    UE_LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Play Use Effects"));
+    LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Play Use Effects"));
     /*UE_LOG(LogTemp, Log, TEXT("%s: %s  %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__), *LocalRoleEnumString);*/
     
     FVector Start;
