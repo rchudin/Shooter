@@ -53,6 +53,12 @@ protected:
 
     void AttachCurrentWeapon();
 
+    // [Server] DropCurrentWeapon
+    UFUNCTION(Reliable, Server)
+    void Server_DropCurrentWeapon() const;
+    
+    void DropCurrentWeapon() const;
+    
 public:
     UWeaponManager();
 
@@ -67,6 +73,8 @@ public:
     void StopUseWeapon() const;
 
     void Reload() const;
+
+    FORCEINLINE void DropWeapon() const { Server_DropCurrentWeapon(); }
 
     FORCEINLINE void SetFunctionAttachedWeapon(
         const TFunction<void(AActor*, const FAttachmentTransformRules&)> Fn)

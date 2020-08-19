@@ -164,14 +164,13 @@ void AShooterCharacter::ActivateThirdPersonCamera() const
 
 void AShooterCharacter::Fire()
 {
-	if (WeaponManager && !HealthComponent->IsDead()) WeaponManager->UseWeapon();
+	if (!HealthComponent->IsDead() && WeaponManager) WeaponManager->UseWeapon();
 }
 
 void AShooterCharacter::StopFire()
 {
-	if (WeaponManager) WeaponManager->StopUseWeapon(); 
+	if (!HealthComponent->IsDead() && WeaponManager) WeaponManager->StopUseWeapon(); 
 }
-
 
 void AShooterCharacter::StartCrouch()
 {
@@ -206,6 +205,7 @@ void AShooterCharacter::Die() const
 	GetMesh()->SetAllBodiesSimulatePhysics(true);
 
 	WeaponManager->RemoveWidgets();
+	WeaponManager->DropWeapon();
 
 	const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
 	FirstPersonCamera->AttachToComponent(GetCapsuleComponent(), Rules);

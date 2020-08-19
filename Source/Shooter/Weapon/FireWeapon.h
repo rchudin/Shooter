@@ -43,7 +43,7 @@ class SHOOTER_API AFireWeapon : public AWeapon
     void OnRep_Scatter() const;
 
     UFUNCTION()
-    void OnRep_IsReloading();
+    void OnRep_IsReloading() const;
 
 
 protected:

@@ -36,7 +36,7 @@ protected:
 
     TFunction<void (FVector*, FVector*)> GetViewPointLambda;
 
-    virtual void Detach();
+    virtual void OnRep_Instigator() override;
 
     FHitResult Trace(const FVector& Start, const FVector& End) const;
 
@@ -54,6 +54,8 @@ protected:
 public:
     AWeapon();
 
+    virtual void Detach(); 
+
     virtual void RemoveUpdatingWidget()
     {
     }
@@ -63,10 +65,6 @@ public:
     }
 
     bool CanUseWeapon() const;
-
-    // [Multicast] Detach
-    UFUNCTION(Reliable, NetMulticast )
-    void Multicast_Detach();
 
     // [Server] Use
     UFUNCTION(Reliable, Server)

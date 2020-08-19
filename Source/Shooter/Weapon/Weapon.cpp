@@ -16,24 +16,28 @@ AWeapon::AWeapon()
     Mesh->SetWorldLocationAndRotation(FVector(), FRotator());
 }
 
-bool AWeapon::CanUseWeapon() const
+void AWeapon::OnRep_Instigator()
 {
-    return HasAuthority() && GetViewPointLambda;
-}
-
-void AWeapon::Multicast_Detach_Implementation()
-{
+    Super::OnRep_Instigator();
     Detach();
 }
 
 void AWeapon::Detach()
 {
+    if (HasAuthority())
+    {
+        SetInstigator(nullptr);
+        SetOwner(nullptr);
+    }
     IsPressedUse = false;
     GetViewPointLambda = nullptr;
     RemoveUpdatingWidget();
-    SetOwner(nullptr);
-    SetInstigator(nullptr);
     DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+}
+
+bool AWeapon::CanUseWeapon() const
+{
+    return HasAuthority() && GetViewPointLambda;
 }
 
 FHitResult AWeapon::Trace(const FVector& Start, const FVector& End) const

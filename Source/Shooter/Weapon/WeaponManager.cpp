@@ -88,11 +88,11 @@ void UWeaponManager::SaveWeapon(AWeapon* Weapon)
     switch (Weapon->GetType())
     {
     case Second:
-        if (SecondWeapon) SecondWeapon->Multicast_Detach();
+        if (SecondWeapon) SecondWeapon->Detach();
         SecondWeapon = Weapon;
         break;
     default:
-        if (MainWeapon) MainWeapon->Multicast_Detach();
+        if (MainWeapon) MainWeapon->Detach();
         MainWeapon = Weapon;
         break;
     }
@@ -127,6 +127,7 @@ void UWeaponManager::TakeWeapon(AWeapon* Weapon)
 
 void UWeaponManager::UseWeapon() const
 {
+    UE_LOG(LogTemp, Error, TEXT("%s"), TEXT("USE WEAPON"));
     if (CurrentWeapon) CurrentWeapon->Server_Use();
 }
 
@@ -142,4 +143,14 @@ void UWeaponManager::Reload() const
         auto FWeapon = Cast<AFireWeapon>(CurrentWeapon);
         FWeapon->Server_Reload();
     }
+}
+
+void UWeaponManager::Server_DropCurrentWeapon_Implementation() const
+{
+    DropCurrentWeapon();
+}
+
+void UWeaponManager::DropCurrentWeapon() const
+{
+    if (CurrentWeapon) CurrentWeapon->Detach();
 }
