@@ -12,71 +12,69 @@
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class SHOOTER_API UWeaponManager : public UActorComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category = "Widget", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> CrosshairWidgetClass;
+    UPROPERTY(EditAnywhere, Category = "Widget", meta = (AllowPrivateAccess = "true"))
+    TSubclassOf<UUserWidget> CrosshairWidgetClass;
 
-	UPROPERTY()
-        class UUserWidget* CrosshairWidget;
-    
-	UPROPERTY(EditAnywhere, Category = "Widget", meta = (AllowPrivateAccess = "true"))
-        TSubclassOf<UAmmoWidget> AmmoWidgetClass;
-    
-	UPROPERTY()
-        class UAmmoWidget* AmmoWidget;
-	
-	UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_CurrentWeapon, Category = "Weapon")
-		class AWeapon* CurrentWeapon;
+    UPROPERTY()
+    class UUserWidget* CrosshairWidget;
 
-	UPROPERTY(replicated)
-		class AWeapon* MainWeapon;
+    UPROPERTY(EditAnywhere, Category = "Widget", meta = (AllowPrivateAccess = "true"))
+    TSubclassOf<UAmmoWidget> AmmoWidgetClass;
 
-	UPROPERTY(replicated)
-		class AWeapon* SecondaryWeapon;
+    UPROPERTY()
+    class UAmmoWidget* AmmoWidget;
 
-	/** Called when the CurrentWeapon variable gets updated */
-	UFUNCTION()
-		void OnRep_CurrentWeapon();
+    UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_CurrentWeapon, Category = "Weapon")
+    class AWeapon* CurrentWeapon;
 
-	void AttachCurrentWeaponToHand();
+    UPROPERTY(replicated)
+    class AWeapon* MainWeapon;
 
-	TFunction<void(AActor*, FAttachmentTransformRules)> AttachWeaponToHandFunction;
+    UPROPERTY(replicated)
+    class AWeapon* SecondWeapon;
+
+    TFunction<void(AActor*, const FAttachmentTransformRules&)> AttachWeaponLambda;
+
+    UFUNCTION()
+    void OnRep_CurrentWeapon();
 
 protected:
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    TFunction<void (FVector*, FVector*)> GetViewPointLambda;
 
-	void SetUpdatingWidgetInWeapon();
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	void SetGetViewPointLambdaInWeapon() const;
-	
-	void RemoveUpdatingWidgetInWeapon() const;
+    void SetUpdatingWidgetInWeapon();
 
-	void SetInstigatorAndOwnerToWeapon() const;
+    void SetFunctionGetViewPointInWeapon() const;
 
-	TFunction<void (FVector&, FVector&)>  GetViewPointLambda;
+    void SaveWeapon(AWeapon* Weapon);
 
-public:	
-	// Sets default values for this component's properties
-	UWeaponManager();
+    void AttachCurrentWeapon();
 
-	void CreateWidgets();
+public:
+    UWeaponManager();
 
-	void RemoveWidgets() const;
+    void CreateWidgets();
 
-	void UseWeapon() const;
-	
-	void StopUseWeapon() const;
+    void RemoveWidgets() const;
 
-	void Reload() const;
+    void TakeWeapon(AWeapon* Weapon);
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-		void TakeWeapon(AWeapon* Weapon);
+    void UseWeapon() const;
 
-	/** Returns CurrentWeapon sub object **/
-    FORCEINLINE class AWeapon* GetCurrentWeapon() const { return CurrentWeapon; }
+    void StopUseWeapon() const;
 
-	FORCEINLINE void SetAttachWeaponToHandFunction(const TFunction<void(AActor*, FAttachmentTransformRules)> F) { AttachWeaponToHandFunction = F; };
+    void Reload() const;
 
-	FORCEINLINE void SetGetViewPointLambda(TFunction<void (FVector&, FVector&)>  F) { GetViewPointLambda = F; }
+    FORCEINLINE void SetFunctionAttachedWeapon(
+        const TFunction<void(AActor*, const FAttachmentTransformRules&)> Fn)
+    {
+        AttachWeaponLambda = Fn;
+    }
+
+    FORCEINLINE void SetFunctionGetViewPoint(const TFunction<void (FVector*, FVector*)> Fn) { GetViewPointLambda = Fn; }
+
+    FORCEINLINE const class AWeapon* GetCurrentWeapon() const { return CurrentWeapon; }
 };

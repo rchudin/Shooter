@@ -12,99 +12,84 @@
 UENUM()
 enum EWeaponType
 {
-	Main		UMETA(DisplayName = "Main"),
-	Secondary	UMETA(DisplayName = "Secondary"),
+    Main UMETA(DisplayName = "Main"),
+    Second UMETA(DisplayName = "Second"),
 };
 
 UCLASS(Abstract)
 class SHOOTER_API AWeapon : public AActor
 {
-	GENERATED_BODY()
-	
-	/** The main skeletal mesh*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh",meta = (AllowPrivateAccess = "true"))
-		class USkeletalMeshComponent* Mesh;
+    GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-		TEnumAsByte<EWeaponType> Type;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+    TEnumAsByte<EWeaponType> Type;
 
-	UFUNCTION()
-		void OnRep_Scatter();
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh",meta = (AllowPrivateAccess = "true"))
+    class USkeletalMeshComponent* Mesh;
+
+protected:
+    UPROPERTY(EditAnywhere, Category = Stats)
+    float Damage = 0;
+
+    UPROPERTY()
+    bool IsPressedUse = false;
+
+    TFunction<void (FVector*, FVector*)> GetViewPointLambda;
+
+    virtual void Detach();
+
+    FHitResult Trace(const FVector& Start, const FVector& End) const;
+
+    void DrawDebugTraceLine(const FHitResult& OutHit, const FVector& Start, FVector End) const;
+
+    virtual void Use()
+    {
+        check(0 && "You must override this");
+    }
+
+    virtual void StopUse()
+    {
+    }
 
 public:
-	static  AWeapon* CreateWeapon(UWorld* World, const TSubclassOf<AWeapon>& WeaponClass, const FVector& Location);
-	
-	// Sets default values for this actor's properties
-	AWeapon();
+    AWeapon();
 
-	// [Server] Use
-	/** Function that handles firing */
-	UFUNCTION(Reliable, Server)
-		void Server_Use();
+    virtual void RemoveUpdatingWidget()
+    {
+    }
 
-	// [Server] StopUse
-	/** Function that handles stop firing */
-	UFUNCTION(Reliable, Server)
-        void Server_StopUse();
+    virtual void RecoverConsumables()
+    {
+    }
 
-	UFUNCTION()
-		virtual bool CanBeUsed() const { check(0 && "You must override this"); return false; }
+    bool CanUseWeapon() const;
 
-	virtual void RemoveUpdatingWidget() { };
+    // [Multicast] Detach
+    UFUNCTION(Reliable, NetMulticast )
+    void Multicast_Detach();
 
-	virtual void Detach();
+    // [Server] Use
+    UFUNCTION(Reliable, Server)
+    void Server_Use();
 
-	/** Returns Mesh sub object **/
-	FORCEINLINE class USkeletalMeshComponent* GetMesh() const { return Mesh; }
+    // [Server] StopUse
+    UFUNCTION(Reliable, Server)
+    void Server_StopUse();
 
-	/** Returns Type sub object **/
-	FORCEINLINE TEnumAsByte<EWeaponType> GetType() const { return Type; }
+    FORCEINLINE TEnumAsByte<EWeaponType> GetType() const { return Type; }
 
-	
-protected:
-	UPROPERTY(EditAnywhere, Category = Stats)
-        float Damage;
-	
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
-	virtual void RestoreToDefaultStats() {}
+    FORCEINLINE class USkeletalMeshComponent* GetMesh() const { return Mesh; }
 
-	virtual void PlayUseEffects() {}
-	
-	//use toggle switch
-	UPROPERTY()
-        bool Pressed;
+    FORCEINLINE void SetFunctionGetViewPoint(const TFunction<void (FVector*, FVector*)> Fn) { GetViewPointLambda = Fn; }
 
-	UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_Scatter, Category = Stats, meta = (AllowPrivateAccess = "true"))
-		bool Scatter;
-	
-	UPROPERTY()
-		FTimerHandle UsagePeriodTimerHandle;
-	
-	UPROPERTY(EditAnywhere, Category = Stats)
-        float UsageTimePeriod;
-
-	UPROPERTY(EditAnywhere, Category = Stats)
-        float UseRange;
-	
-	virtual void OnRep_Instigator() override;
-
-	FHitResult Trace(const FVector& Start, const FVector& End) const;
-
-	virtual void GetViewPoint(FVector& Out_Location, FVector& Out_Forward) const;
-	
-	void CalculateTrajectory(FVector& Start, FVector& End) const;
-	
-	void DrawDebugFireLine(FHitResult& OutHit, FVector& Start, FVector& End) const;
-
-	virtual void Use() { check(0 && "You must override this"); }
+    static AWeapon* CreateWeapon(UWorld* World, const TSubclassOf<AWeapon>& WeaponClass, const FVector& Location);
 };
 
 USTRUCT(BlueprintType)
 struct FWeaponInstance : public FTableRowBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TSubclassOf<AWeapon> Weapon;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TSubclassOf<AWeapon> Weapon;
 };

@@ -61,13 +61,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 
-	void GetPlayerViewPoint(FVector& Out_Location, FVector& Out_Forward) const;
+	void GetPlayerViewPoint(FVector *OutLocation, FVector *OutForward) const;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	virtual void PossessedBy(AController * NewController) override;
+	virtual void PossessedBy(AController *NewController) override;
 
 	virtual void UnPossessed() override;
 
@@ -115,15 +115,22 @@ protected:
 	void ActivateThirdPersonCamera() const;
 
 	/** Function that handles firing */
-	void Fire() { if (WeaponManager) WeaponManager->UseWeapon(); }
+	void Fire();
 
-	void StopFire() { if (WeaponManager) WeaponManager->StopUseWeapon(); }
+	void StopFire();
 	
 	/* Start Crouch */
 	void StartCrouch();
 	
 	/* Stop Crouch*/
 	void StopCrouch();
+
+	void CreateWidgets() const;
+
+	void RemoveWidgets() const;
+
+	UFUNCTION()
+	void Die() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
         FRotator GetAimRotation(int BoneCount) const;

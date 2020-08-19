@@ -7,6 +7,15 @@
 #include "Shooter/FunctionLibrary.h"
 
 
+AFireWeapon::AFireWeapon()
+{
+    MaxCurrentAmmo = 31;
+    MaxTotalAmmo = 180;
+    ReloadTime = 1.7f;
+    UsageInterval = 0.2f;
+    UsedRange = 10000.f;
+    Damage = 20.f;
+}
 
 void AFireWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -14,165 +23,121 @@ void AFireWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 
     DOREPLIFETIME_CONDITION(AFireWeapon, TotalAmmo, COND_OwnerOnly);
     DOREPLIFETIME_CONDITION(AFireWeapon, CurrentAmmo, COND_OwnerOnly);
-    DOREPLIFETIME(AFireWeapon, Reloading);
+    DOREPLIFETIME(AFireWeapon, Scatter);
+    DOREPLIFETIME(AFireWeapon, IsReloading);
 }
 
-
-AFireWeapon::AFireWeapon()
+void AFireWeapon::OnRep_Scatter() const
 {
-    MaxCurrentAmmo = 31;
-    MaxTotalAmmo = 180;
-    UsageTimePeriod = 0.5f;
-    UseRange = 10000.f;
-    ReloadTime =  1.7f;
-    Damage = 20.f;
+    PlayUseEffects();
 }
 
-
-void AFireWeapon::RestoreToDefaultStats()
+void AFireWeapon::OnRep_IsReloading()
 {
-    Super::RestoreToDefaultStats();
-    
+    PlayReloadingEffects();
+}
+
+void AFireWeapon::SetFunctionUpdatingWidgetCurrentAmmo(const TFunction<void(const int& Value)> Function)
+{
+    TotalAmmo.UpdateWidget = Function;
+    TotalAmmo.OnUpdate();
+}
+
+void AFireWeapon::SetFunctionUpdatingWidgetTotalAmmo(const TFunction<void(const int& Value)> Function)
+{
+    CurrentAmmo.UpdateWidget = Function;
+    CurrentAmmo.OnUpdate();
+}
+
+void AFireWeapon::RemoveUpdatingWidget()
+{
+    SetFunctionUpdatingWidgetCurrentAmmo(nullptr);
+    SetFunctionUpdatingWidgetTotalAmmo(nullptr);
+}
+
+void AFireWeapon::RecoverConsumables()
+{
     CurrentAmmo = MaxCurrentAmmo;
     TotalAmmo = MaxTotalAmmo;
 }
 
-
-void AFireWeapon::OnRep_Instigator()
+bool AFireWeapon::CanUseFireWeapon() const
 {
-    Super::OnRep_Instigator();
-
-    ForgetGetViewPointLambda();
+    return CanUseWeapon() &&
+        CurrentAmmo > 0 && UsedRange > 0 &&
+        (!ReloadingTimerHandle.IsValid() || !GetWorldTimerManager().IsTimerActive(ReloadingTimerHandle));
 }
-
-
-void AFireWeapon::OnRep_Reloading()
-{
-    if (Reloading)
-    {
-        PlayReloadingEffects();
-    }
-}
-
-
-void AFireWeapon::RemoveUpdatingWidget()
-{
-    CurrentAmmo.UpdateWidget = nullptr;
-    TotalAmmo.UpdateWidget = nullptr;
-}
-
-
-void AFireWeapon::Detach()
-{
-    Super::Detach();
-    
-    ForgetGetViewPointLambda();
-}
-
-
-void AFireWeapon::GetViewPoint(FVector& Out_Location, FVector& Out_Forward) const
-{
-    if (GetViewPointLambda)
-    {
-        GetViewPointLambda(Out_Location, Out_Forward);
-    }
-    else
-    {
-        Out_Location = GetMesh()->GetSocketLocation(MuzzleSocket);
-        Out_Forward = GetMesh()->GetSocketRotation(MuzzleSocket).Vector();
-    }
-}
-
-
-bool AFireWeapon::CanBeUsed() const
-{
-    if (CurrentAmmo <= 0) return false;
-
-    if (Reloading) return false;
-
-    return true;
-}
-
 
 void AFireWeapon::Use()
 {
-    if (CanBeUsed() && HasAuthority()) {
+    if (CanUseFireWeapon() && (!UseTimerHandle.IsValid() || !GetWorldTimerManager().IsTimerActive(UseTimerHandle)))
+    {
         LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Use weapon"));
-        
-        UWorld* World = GetWorld();
-        if (World) {
-            FTimerDelegate TimerCallback;
-            TimerCallback.BindLambda([&, World]
-            {
-                if (CanBeUsed() && AutoFire && Pressed)
-                {
-                    Fire();
-                }
-                else
-                {
-                    World->GetTimerManager().ClearTimer(UsagePeriodTimerHandle);
-                }
-            });
-            Fire();
-            World->GetTimerManager().SetTimer(UsagePeriodTimerHandle, TimerCallback, UsageTimePeriod, true);
-        }
 
+        FTimerDelegate TimerCallback;
+        TimerCallback.BindLambda([&]
+        {
+            if (CanUseFireWeapon() && AutoFire && IsPressedUse)
+            {
+                Fire();
+            }
+            else
+            {
+                GetWorld()->GetTimerManager().ClearTimer(UseTimerHandle);
+            }
+        });
+        Fire();
+        GetWorld()->GetTimerManager().SetTimer(UseTimerHandle, TimerCallback, UsageInterval, true);
     }
+}
+
+FHitResult AFireWeapon::CalculateTrajectory(FVector* Start, FVector* Forward, FVector* End) const
+{
+    if (Start && Forward && End)
+    {
+        if (GetViewPointLambda) GetViewPointLambda(Start, Forward);
+        *End = ((*Forward * UsedRange) + *Start);
+        return Trace(*Start, *End);
+    }
+    return FHitResult();
 }
 
 void AFireWeapon::Fire()
 {
-    if (HasAuthority())
-    {
-        FVector Start;
-        FVector End;
-        CalculateTrajectory(Start, End);
-        FHitResult OutHit = Trace(Start, End);
-        --CurrentAmmo;
-        
-        Scatter = !Scatter;
+    FVector Start, Forward, End;
+    const FHitResult OutHit = CalculateTrajectory(&Start, &Forward, &End);
+    --CurrentAmmo;
+    Scatter = !Scatter;
 
-        UGameplayStatics::ApplyPointDamage(OutHit.GetActor(), Damage, End -Start, OutHit, GetInstigatorController(), this, nullptr);
-        
-        if (GetNetMode() == NM_Standalone || 
-            (GetNetMode() == NM_ListenServer && GetLocalRole() == ROLE_Authority))
-        {
-            PlayUseEffects();
-        }
+    UGameplayStatics::ApplyPointDamage(OutHit.GetActor(), Damage, End - Start,
+                                       OutHit, GetInstigatorController(), this, nullptr);
+
+    if (GetNetMode() == NM_Standalone ||
+        (GetNetMode() == NM_ListenServer && GetLocalRole() == ROLE_Authority))
+    {
+        PlayUseEffects();
     }
 }
 
-
-void AFireWeapon::PlayUseEffects()
+void AFireWeapon::PlayUseEffects() const
 {
-    const FString LocalRoleEnumString = UEnum::GetValueAsString(GetLocalRole());
-    LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("Play Use Effects"));
-    /*UE_LOG(LogTemp, Log, TEXT("%s: %s  %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__), *LocalRoleEnumString);*/
-    
-    FVector Start;
-    FVector End;
-    CalculateTrajectory(Start, End);
-    FHitResult OutHit = Trace(Start, End);
-
+    FVector Start, Forward, End;
+    const FHitResult OutHit = CalculateTrajectory(&Start, &Forward, &End);
     if (GetMesh())
     {
         const FVector NewStart = GetMesh()->GetSocketLocation(MuzzleSocket);
         if (!NewStart.IsZero())
         {
             Start = NewStart;
-            /*if (Projectile)
-            {
-                FRotator Rotate =  UKismetMathLibrary::FindLookAtRotation(Start, OutHit.Location);
-            }*/
+            // if (Projectile) FRotator Rotate = UKismetMathLibrary::FindLookAtRotation(Start, OutHit.Location);
         }
-        if (GetMesh() && FireAnimation) {
+        if (GetMesh() && FireAnimation)
+        {
             GetMesh()->PlayAnimation(FireAnimation, false);
         }
     }
-        
-    DrawDebugFireLine(OutHit, Start, End);
+    DrawDebugTraceLine(OutHit, Start, End);
 }
-
 
 // [Server] Reload
 void AFireWeapon::Server_Reload_Implementation()
@@ -180,37 +145,33 @@ void AFireWeapon::Server_Reload_Implementation()
     Reload();
 }
 
-
 void AFireWeapon::Reload()
 {
-    UE_LOG(LogTemp, Log, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-    
     UWorld* World = GetWorld();
-    
-    if (World && HasAuthority() && TotalAmmo > 0 && CurrentAmmo != MaxCurrentAmmo  &&
+
+    if (World && HasAuthority() && TotalAmmo > 0 && CurrentAmmo != MaxCurrentAmmo &&
         (!ReloadingTimerHandle.IsValid() || !GetWorldTimerManager().IsTimerActive(ReloadingTimerHandle)))
-        {
-        
-        const int AppendAmmo = (TotalAmmo < MaxCurrentAmmo ? TotalAmmo : MaxCurrentAmmo) - CurrentAmmo;
+    {
+        const int Lacks = MaxCurrentAmmo - CurrentAmmo;
+        const int AppendAmmo = TotalAmmo < Lacks ? TotalAmmo : Lacks;
         TotalAmmo -= AppendAmmo;
-        Reloading = true;
+        IsReloading = true;
         FTimerDelegate TimerCallback;
         TimerCallback.BindLambda([&, AppendAmmo]
         {
             CurrentAmmo += AppendAmmo;
-            Reloading = false;
+            IsReloading = false;
         });
         World->GetTimerManager().SetTimer(ReloadingTimerHandle, TimerCallback, ReloadTime, false);
-        if (GetNetMode() == NM_Standalone || 
-               (GetNetMode() == NM_ListenServer && GetLocalRole() == ROLE_Authority))
+        if (GetNetMode() == NM_Standalone ||
+            (GetNetMode() == NM_ListenServer && GetLocalRole() == ROLE_Authority))
         {
             PlayReloadingEffects();
         }
     }
 }
 
-
-void AFireWeapon::PlayReloadingEffects()
+void AFireWeapon::PlayReloadingEffects() const
 {
     if (GetMesh() && ReloadAnimation) GetMesh()->PlayAnimation(ReloadAnimation, false);
 

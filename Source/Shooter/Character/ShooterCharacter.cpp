@@ -68,14 +68,18 @@ AShooterCharacter::AShooterCharacter()
 
 	//Health component
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+	HealthComponent->SetFunctionDie([&]()
+	{
+		Die();
+	});
 	
 	// Weapon Manager
 	WeaponManager = CreateDefaultSubobject<UWeaponManager>(TEXT("WeaponManager"));
-	WeaponManager->SetAttachWeaponToHandFunction([&](AActor* Actor, const FAttachmentTransformRules Rules)
+	WeaponManager->SetFunctionAttachedWeapon([&](AActor* Actor, const FAttachmentTransformRules Rules)
     {
 		Actor->AttachToComponent(GetMesh(), Rules, "skt_weapon");
     });
-	WeaponManager->SetGetViewPointLambda([&](FVector& Out_Location, FVector& Out_Forward)
+	WeaponManager->SetFunctionGetViewPoint([&](FVector *Out_Location, FVector *Out_Forward)
 	{
 		GetPlayerViewPoint(Out_Location,Out_Forward);
 	});
@@ -92,8 +96,7 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 	LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("%s"), TEXT(__FUNCTION__));
 	Super::PossessedBy(NewController);
 
-	HealthComponent->CreateWidgets();
-	WeaponManager->CreateWidgets();
+	CreateWidgets();
 	
 	/* TEMPORARY */
 	if (HasAuthority())
@@ -105,6 +108,7 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 			if (WeaponInstance)
 			{
 				AWeapon* NewWeapon = AWeapon::CreateWeapon(GetWorld(), WeaponInstance->Weapon, this->GetActorLocation());
+				NewWeapon->RecoverConsumables();
 				if (NewWeapon) WeaponManager->TakeWeapon(NewWeapon);
 			}
 		}
@@ -114,8 +118,7 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 
 void AShooterCharacter::UnPossessed()
 {
-	HealthComponent->RemoveWidgets();
-	WeaponManager->RemoveWidgets();
+	RemoveWidgets();
 }
 
 void AShooterCharacter::OnRep_Controller()
@@ -123,23 +126,17 @@ void AShooterCharacter::OnRep_Controller()
 	LOG_INSTANCE(LogTemp, Log, HasAuthority(), TEXT("%s"), TEXT(__FUNCTION__))
 	Super::OnRep_Controller();
 
-	if (GetController())
-	{
-		HealthComponent->CreateWidgets();
-		WeaponManager->CreateWidgets();
-	}
-	else
-	{
-		HealthComponent->RemoveWidgets();
-		WeaponManager->RemoveWidgets();
-	}
+	GetController() ? CreateWidgets() : RemoveWidgets();
 }
 
 
-void AShooterCharacter::GetPlayerViewPoint(FVector& Out_Location, FVector& Out_Forward) const
+void AShooterCharacter::GetPlayerViewPoint(FVector* OutLocation, FVector* OutForward) const
 {
-	Out_Location = GetFollowCamera() ? GetFollowCamera()->GetComponentLocation() : GetActorLocation();
-	Out_Forward = GetController() ? GetController()->GetControlRotation().Vector() : GetBaseAimRotation().Vector(); 
+	if (OutLocation && OutForward)
+	{
+		*OutLocation = GetFollowCamera() ? GetFollowCamera()->GetComponentLocation() : GetActorLocation();
+		*OutForward = GetController() ? GetController()->GetControlRotation().Vector() : GetBaseAimRotation().Vector();
+	}
 }
 
 
@@ -165,6 +162,16 @@ void AShooterCharacter::ActivateThirdPersonCamera() const
 	}
 }
 
+void AShooterCharacter::Fire()
+{
+	if (WeaponManager && !HealthComponent->IsDead()) WeaponManager->UseWeapon();
+}
+
+void AShooterCharacter::StopFire()
+{
+	if (WeaponManager) WeaponManager->StopUseWeapon(); 
+}
+
 
 void AShooterCharacter::StartCrouch()
 {
@@ -178,6 +185,30 @@ void AShooterCharacter::StopCrouch()
 	UE_LOG(LogTemp, Log, TEXT("%s: %s"), HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
 
 	UnCrouch();
+}
+
+void AShooterCharacter::CreateWidgets() const
+{
+	HealthComponent->CreateWidgets();
+	WeaponManager->CreateWidgets();
+}
+
+void AShooterCharacter::RemoveWidgets() const
+{
+	HealthComponent->RemoveWidgets();
+	WeaponManager->RemoveWidgets();
+}
+
+void AShooterCharacter::Die() const
+{
+	GetCharacterMovement()->DisableMovement();
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetMesh()->SetAllBodiesSimulatePhysics(true);
+
+	WeaponManager->RemoveWidgets();
+
+	const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
+	FirstPersonCamera->AttachToComponent(GetCapsuleComponent(), Rules);
 }
 
 FRotator AShooterCharacter::GetAimRotation(const int BoneCount) const

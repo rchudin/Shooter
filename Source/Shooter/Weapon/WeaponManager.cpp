@@ -2,190 +2,144 @@
 
 
 #include "WeaponManager.h"
+#include "Shooter/FunctionLibrary.h"
 
 
-// Sets default values for this component's properties
 UWeaponManager::UWeaponManager()
 {
-	PrimaryComponentTick.bCanEverTick = true;
-	/*SetNetAddressable();*/ // Make DSO components net addressable
-	SetIsReplicated(true);
+    PrimaryComponentTick.bCanEverTick = false;
+    SetIsReplicated(true);
 }
-
 
 void UWeaponManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps); 
-
-	DOREPLIFETIME(UWeaponManager, CurrentWeapon);
-	DOREPLIFETIME_CONDITION(UWeaponManager, MainWeapon, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(UWeaponManager, SecondaryWeapon, COND_OwnerOnly);
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(UWeaponManager, CurrentWeapon);
+    DOREPLIFETIME_CONDITION(UWeaponManager, MainWeapon, COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(UWeaponManager, SecondWeapon, COND_OwnerOnly);
 }
-
 
 void UWeaponManager::OnRep_CurrentWeapon()
 {
-	AttachCurrentWeaponToHand();
+    AttachCurrentWeapon();
+    SetFunctionGetViewPointInWeapon();
 }
-
 
 void UWeaponManager::CreateWidgets()
 {
-	const FString LocalRoleEnumString = UEnum::GetValueAsString(GetOwnerRole());
-    UE_LOG(LogTemp, Log, TEXT("%s: %s  %s"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__), *LocalRoleEnumString);
-	
-	if (GetNetMode() == NM_Standalone ||
-		GetOwnerRole() == ROLE_AutonomousProxy)
-	{
-		if(CrosshairWidgetClass && !CrosshairWidget)
-		{
-			CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
-			if (CrosshairWidget) CrosshairWidget->AddToViewport();
-		}
-
-		if (AmmoWidgetClass && !AmmoWidget)
-		{
-			AmmoWidget = CreateWidget<UAmmoWidget>(GetWorld(), AmmoWidgetClass);
-			if (AmmoWidget)
-			{
-				AmmoWidget->AddToViewport();
-				SetUpdatingWidgetInWeapon();
-			}
-		}
-	}
+    if (GetNetMode() == NM_Standalone ||
+        GetOwnerRole() == ROLE_AutonomousProxy)
+    {
+        if (CrosshairWidgetClass && !CrosshairWidget)
+        {
+            CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
+            if (CrosshairWidget) CrosshairWidget->AddToViewport();
+        }
+        if (AmmoWidgetClass && !AmmoWidget)
+        {
+            AmmoWidget = CreateWidget<UAmmoWidget>(GetWorld(), AmmoWidgetClass);
+            if (AmmoWidget)
+            {
+                AmmoWidget->AddToViewport();
+                SetUpdatingWidgetInWeapon();
+            }
+        }
+    }
 }
-
 
 void UWeaponManager::RemoveWidgets() const
 {
-	RemoveUpdatingWidgetInWeapon();
-	if (CrosshairWidget)
-	{
-		if (CrosshairWidget->IsInViewport()) CrosshairWidget->RemoveFromViewport();
-		CrosshairWidget->Destruct();
-	}
-
-	if(AmmoWidget)
-	{
-		if (AmmoWidget->IsInViewport()) AmmoWidget->RemoveFromViewport();
-		AmmoWidget->Destruct();
-	}
+    CurrentWeapon->RemoveUpdatingWidget();
+    if (CrosshairWidget)
+    {
+        if (CrosshairWidget->IsInViewport()) CrosshairWidget->RemoveFromViewport();
+        CrosshairWidget->Destruct();
+    }
+    if (AmmoWidget)
+    {
+        if (AmmoWidget->IsInViewport()) AmmoWidget->RemoveFromViewport();
+        AmmoWidget->Destruct();
+    }
 }
-
 
 void UWeaponManager::SetUpdatingWidgetInWeapon()
 {
-	auto FWeapon = Cast<AFireWeapon>(CurrentWeapon);
-	if (FWeapon)
-	{
-		UAmmoWidget** RefWidget = &AmmoWidget; 
-		FWeapon->SetOnCurrentAmmoUpdateFunction([RefWidget](const int& Count)
+    auto FWeapon = Cast<AFireWeapon>(CurrentWeapon);
+    if (CurrentWeapon && AmmoWidget)
+    {
+        FWeapon->SetFunctionUpdatingWidgetCurrentAmmo([&](const int& Count)
         {
-            if (RefWidget)
-            {
-                UAmmoWidget* Widget = *RefWidget;
-                if (Widget) Widget->UpdateCurrentAmmo(Count);
-            }
+            if (AmmoWidget) AmmoWidget->UpdateCurrentAmmo(Count);
         });
-		
-		FWeapon->SetOnTotalAmmoUpdateFunction([RefWidget](const int& Count)
+        FWeapon->SetFunctionUpdatingWidgetTotalAmmo([&](const int& Count)
         {
-            if (RefWidget)
-            {
-                UAmmoWidget* Widget = *RefWidget;
-                if (Widget) Widget->UpdateTotalAmmo(Count);
-            }
+            if (AmmoWidget) AmmoWidget->UpdateTotalAmmo(Count);
         });
-	}
+    }
 }
 
-void UWeaponManager::SetGetViewPointLambdaInWeapon() const
+void UWeaponManager::SetFunctionGetViewPointInWeapon() const
 {
-	auto FWeapon = Cast<AFireWeapon>(CurrentWeapon);
-	if (FWeapon)
-	{
-		FWeapon->SetGetViewPointLambda(GetViewPointLambda);
-	}
+    if (CurrentWeapon) CurrentWeapon->SetFunctionGetViewPoint(GetViewPointLambda);
 }
 
-
-void UWeaponManager::RemoveUpdatingWidgetInWeapon() const
+void UWeaponManager::SaveWeapon(AWeapon* Weapon)
 {
-	if (CurrentWeapon) CurrentWeapon->RemoveUpdatingWidget();
+    switch (Weapon->GetType())
+    {
+    case Second:
+        if (SecondWeapon) SecondWeapon->Multicast_Detach();
+        SecondWeapon = Weapon;
+        break;
+    default:
+        if (MainWeapon) MainWeapon->Multicast_Detach();
+        MainWeapon = Weapon;
+        break;
+    }
 }
 
-
-void UWeaponManager::UseWeapon() const
+void UWeaponManager::AttachCurrentWeapon()
 {
-	if (CurrentWeapon) CurrentWeapon->Server_Use();
+    if (CurrentWeapon && AttachWeaponLambda)
+    {
+        const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
+        AttachWeaponLambda(CurrentWeapon, Rules);
+
+        SetUpdatingWidgetInWeapon();
+        SetFunctionGetViewPointInWeapon();
+    }
 }
-
-
-void UWeaponManager::StopUseWeapon() const
-{
-	if (CurrentWeapon) CurrentWeapon->Server_StopUse();
-}
-
-
-void UWeaponManager::Reload() const
-{
-	if (CurrentWeapon)
-	{
-		auto FWeapon = Cast<AFireWeapon>(CurrentWeapon);
-		FWeapon->Server_Reload();
-	}
-}
-
-
-void UWeaponManager::SetInstigatorAndOwnerToWeapon() const
-{
-	if (CurrentWeapon)
-	{
-		APawn* Pawn =  Cast<APawn>(GetOwner());
-		CurrentWeapon->SetInstigator(Pawn);
-		if (Pawn)
-		{
-			AController* PlayerController = Pawn->GetController();
-			PlayerController ? CurrentWeapon->SetOwner(PlayerController) : CurrentWeapon->SetOwner(Pawn);
-		}
-	}
-}
-
-void UWeaponManager::AttachCurrentWeaponToHand()
-{
-	if (CurrentWeapon)
-	{
-		const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
-		if (AttachWeaponToHandFunction)
-		{
-			AttachWeaponToHandFunction(CurrentWeapon, Rules);
-		}
-		else
-		{
-			const auto ActorOwner = GetOwner();
-			if (ActorOwner)
-				CurrentWeapon->AttachToComponent(ActorOwner->GetRootComponent(), Rules);
-		}
-		
-		SetUpdatingWidgetInWeapon();
-
-		SetGetViewPointLambdaInWeapon();
-	}
-}
-
 
 void UWeaponManager::TakeWeapon(AWeapon* Weapon)
 {
-	UE_LOG(LogTemp, Log, TEXT("%s: %s"), GetOwner()->HasAuthority()?TEXT("Server"):TEXT("Client"), TEXT(__FUNCTION__));
-	
-	if (GetOwner()->HasAuthority() && Weapon)
-	{
-		if (CurrentWeapon) CurrentWeapon->Detach();
-		
-		CurrentWeapon = Weapon;
+    APawn* Pawn = Cast<APawn>(GetOwner());
+    LOG_INSTANCE(LogTemp, Log, Pawn->HasAuthority(), TEXT("%s"), TEXT(__FUNCTION__));
+    if (Pawn->HasAuthority() && Weapon && AttachWeaponLambda)
+    {
+        SaveWeapon(Weapon);
+        CurrentWeapon = Weapon;
+        CurrentWeapon->SetInstigator(Pawn);
+        CurrentWeapon->SetOwner(Pawn->GetController());
 
-		SetInstigatorAndOwnerToWeapon();
+        AttachCurrentWeapon();
+    }
+}
 
-		AttachCurrentWeaponToHand();
-	}
+void UWeaponManager::UseWeapon() const
+{
+    if (CurrentWeapon) CurrentWeapon->Server_Use();
+}
+
+void UWeaponManager::StopUseWeapon() const
+{
+    if (CurrentWeapon) CurrentWeapon->Server_StopUse();
+}
+
+void UWeaponManager::Reload() const
+{
+    if (CurrentWeapon)
+    {
+        auto FWeapon = Cast<AFireWeapon>(CurrentWeapon);
+        FWeapon->Server_Reload();
+    }
 }
