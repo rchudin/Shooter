@@ -21,14 +21,14 @@ class SHOOTER_API AWeapon : public AActor
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
     TEnumAsByte<EWeaponType> Type;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh",meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mesh",meta = (AllowPrivateAccess = "true"))
     class USkeletalMeshComponent* Mesh;
 
 protected:
-    UPROPERTY(EditAnywhere, Category = Stats)
+    UPROPERTY(EditDefaultsOnly, Category = Stats)
     float Damage = 0;
 
     UPROPERTY()

@@ -102,6 +102,7 @@ void UWeaponManager::AttachCurrentWeapon()
 {
     if (CurrentWeapon && AttachWeaponLambda)
     {
+        CurrentWeapon->GetMesh()->SetSimulatePhysics(false);
         const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
         AttachWeaponLambda(CurrentWeapon, Rules);
 

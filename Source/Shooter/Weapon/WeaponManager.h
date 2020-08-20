@@ -74,7 +74,7 @@ public:
 
     void Reload() const;
 
-    FORCEINLINE void DropWeapon() const { Server_DropCurrentWeapon(); }
+    FORCEINLINE void DropWeapon() const { if (CurrentWeapon) Server_DropCurrentWeapon(); }
 
     FORCEINLINE void SetFunctionAttachedWeapon(
         const TFunction<void(AActor*, const FAttachmentTransformRules&)> Fn)

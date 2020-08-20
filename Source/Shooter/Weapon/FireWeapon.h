@@ -13,7 +13,7 @@ class SHOOTER_API AFireWeapon : public AWeapon
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditDefaultsOnly, Category = AnimationVisibleAnywhere, meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(EditDefaultsOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
     class UAnimationAsset* FireAnimation;
 
     UPROPERTY(EditDefaultsOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
@@ -25,11 +25,11 @@ class SHOOTER_API AFireWeapon : public AWeapon
     UPROPERTY(EditDefaultsOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
     FName MuzzleSocket;
 
-    UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_Scatter,
+    UPROPERTY(VisibleDefaultsOnly, Transient, ReplicatedUsing = OnRep_Scatter,
         Category = Fire, meta = (AllowPrivateAccess = "true"))
     bool Scatter;
 
-    UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_IsReloading,
+    UPROPERTY(VisibleDefaultsOnly, Transient, ReplicatedUsing = OnRep_IsReloading,
         Category = Animation, meta = (AllowPrivateAccess = "true"))
     bool IsReloading;
 
@@ -47,30 +47,30 @@ class SHOOTER_API AFireWeapon : public AWeapon
 
 
 protected:
-    UPROPERTY(EditAnywhere, Category = Stats)
+    UPROPERTY(EditDefaultsOnly, Category = Stats)
     int MaxCurrentAmmo;
 
-    UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_CurrentAmmo,
+    UPROPERTY(VisibleDefaultsOnly, Transient, ReplicatedUsing = OnRep_CurrentAmmo,
         Category = Stats, meta = (AllowPrivateAccess = "true"))
     FCounterInt CurrentAmmo;
 
-    UPROPERTY(EditAnywhere, Category = Stats)
-    int MaxTotalAmmo;
+    UPROPERTY(EditDefaultsOnly, Category = Stats)
+    int DefaultTotalAmmo;
 
-    UPROPERTY(VisibleAnywhere, Transient, ReplicatedUsing = OnRep_TotalAmmo,
+    UPROPERTY(VisibleDefaultsOnly, Transient, ReplicatedUsing = OnRep_TotalAmmo,
         Category = Stats, meta = (AllowPrivateAccess = "true"))
     FCounterInt TotalAmmo;
 
-    UPROPERTY(EditAnywhere, Category = Stats)
+    UPROPERTY(EditDefaultsOnly, Category = Stats)
     float ReloadTime;
 
-    UPROPERTY(EditAnywhere, Category = Stats)
+    UPROPERTY(EditDefaultsOnly, Category = Stats)
     bool AutoFire = false;
 
-    UPROPERTY(EditAnywhere, Category = Stats)
+    UPROPERTY(EditDefaultsOnly, Category = Stats)
     float UsageInterval;
 
-    UPROPERTY(EditAnywhere, Category = Stats)
+    UPROPERTY(EditDefaultsOnly, Category = Stats)
     float UsedRange;
 
     UPROPERTY()

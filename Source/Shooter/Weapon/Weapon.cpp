@@ -3,7 +3,6 @@
 #include "Weapon.h"
 #include "DrawDebugHelpers.h"
 
-
 AWeapon::AWeapon()
 {
     PrimaryActorTick.bCanEverTick = false;
@@ -14,13 +13,19 @@ AWeapon::AWeapon()
     Mesh = CreateOptionalDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
     Mesh->SetupAttachment(RootComponent);
     Mesh->SetWorldLocationAndRotation(FVector(), FRotator());
+    Mesh->SetSimulatePhysics(true);
+    Mesh->SetCollisionProfileName(TEXT("Weapon"));
 }
 
 void AWeapon::OnRep_Instigator()
 {
     Super::OnRep_Instigator();
-    Detach();
+    if (!GetInstigator())
+    {
+        Detach();
+    }
 }
+
 
 void AWeapon::Detach()
 {
@@ -33,6 +38,8 @@ void AWeapon::Detach()
     GetViewPointLambda = nullptr;
     RemoveUpdatingWidget();
     DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+    SetActorLocation(GetActorForwardVector() * 100 + GetActorLocation());
+    Mesh->SetSimulatePhysics(true);
 }
 
 bool AWeapon::CanUseWeapon() const

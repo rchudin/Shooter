@@ -10,8 +10,8 @@
 AFireWeapon::AFireWeapon()
 {
     MaxCurrentAmmo = 31;
-    MaxTotalAmmo = 180;
-    ReloadTime = 1.7f;
+    DefaultTotalAmmo = MaxCurrentAmmo * 4;
+    ReloadTime = 1.f;
     UsageInterval = 0.2f;
     UsedRange = 10000.f;
     Damage = 20.f;
@@ -58,7 +58,7 @@ void AFireWeapon::RemoveUpdatingWidget()
 void AFireWeapon::RecoverConsumables()
 {
     CurrentAmmo = MaxCurrentAmmo;
-    TotalAmmo = MaxTotalAmmo;
+    TotalAmmo = DefaultTotalAmmo;
 }
 
 bool AFireWeapon::CanUseFireWeapon() const
