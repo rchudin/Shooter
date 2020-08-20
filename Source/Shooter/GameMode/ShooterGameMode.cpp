@@ -2,8 +2,8 @@
 
 #include "ShooterGameMode.h"
 #include "GameFramework/HUD.h"
-#include "ShooterPlayerController.h"
-#include "ShooterPlayerState.h"
+#include "Shooter/ShooterPlayerController.h"
+#include "Shooter/ShooterPlayerState.h"
 #include "UObject/ConstructorHelpers.h"
 
 AShooterGameMode::AShooterGameMode()
