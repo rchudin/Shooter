@@ -4,21 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
-#include "InGameHud.generated.h"
+#include "InGameHUD.generated.h"
 
 
 UCLASS()
-class SHOOTER_API AInGameHud : public AHUD
+class SHOOTER_API AInGameHUD : public AHUD
 {
-	GENERATED_BODY()
-public:
-    AInGameHud();
+    GENERATED_BODY()
 
 protected:
     virtual void BeginPlay() override;
-    
+
     virtual void DrawHUD() override;
 
-    
-    
+public:
+    AInGameHUD();
 };

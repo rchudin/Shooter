@@ -1,23 +1,19 @@
 // Copyright © 2020 ruslanchudin.com
 
 
-#include "InGameHud.h"
+#include "InGameHUD.h"
 
 
-AInGameHud::AInGameHud()
+AInGameHUD::AInGameHUD()
 {
-    
 }
 
-void AInGameHud::BeginPlay()
+void AInGameHUD::BeginPlay()
 {
     Super::BeginPlay();
-
 }
 
-void AInGameHud::DrawHUD()
+void AInGameHUD::DrawHUD()
 {
     Super::DrawHUD();
-    
 }
-
