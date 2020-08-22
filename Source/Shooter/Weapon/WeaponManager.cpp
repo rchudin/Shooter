@@ -2,7 +2,7 @@
 
 
 #include "WeaponManager.h"
-#include "Shooter/FunctionLibrary.h"
+#include "Shooter/Core/FunctionLibrary.h"
 
 
 UWeaponManager::UWeaponManager()
@@ -128,7 +128,6 @@ void UWeaponManager::TakeWeapon(AWeapon* Weapon)
 
 void UWeaponManager::UseWeapon() const
 {
-    UE_LOG(LogTemp, Error, TEXT("%s"), TEXT("USE WEAPON"));
     if (CurrentWeapon) CurrentWeapon->Server_Use();
 }
 

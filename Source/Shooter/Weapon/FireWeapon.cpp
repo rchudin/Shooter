@@ -4,7 +4,7 @@
 #include "FireWeapon.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
-#include "Shooter/FunctionLibrary.h"
+#include "Shooter/Core/FunctionLibrary.h"
 
 
 AFireWeapon::AFireWeapon()

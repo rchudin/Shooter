@@ -3,7 +3,7 @@
 
 #include "HealthComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "Shooter/FunctionLibrary.h"
+#include "Shooter/Core/FunctionLibrary.h"
 
 
 UHealthComponent::UHealthComponent()

@@ -25,7 +25,7 @@ void AMainMenuHUD::BeginPlay()
     }
     if (MainMenuWidget) MainMenuWidget->AddToViewport();
 
-    APlayerController* PC = Cast<APlayerController>(GetInstigatorController());
+    APlayerController* PC = Cast<APlayerController>(GetOwningPlayerController());
     if(PC)
     {
         PC->bShowMouseCursor = true; 

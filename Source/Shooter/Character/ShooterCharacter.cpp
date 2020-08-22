@@ -4,7 +4,7 @@
 #include "ShooterCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
-#include "Shooter/FunctionLibrary.h"
+#include "Shooter/Core/FunctionLibrary.h"
 #include "Shooter/ShooterPlayerController.h"
 #include "Shooter/ShooterPlayerState.h"
 
