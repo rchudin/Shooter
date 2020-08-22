@@ -2,7 +2,7 @@
 
 
 #include "MainMenuWidget.h"
-#include "Shooter/Core/Auth.h"
+#include "Shooter/Core/MainMenu.h"
 
 
 UMainMenuWidget::UMainMenuWidget(const FObjectInitializer& ObjectInitializer): Super(ObjectInitializer)
@@ -26,5 +26,5 @@ bool UMainMenuWidget::Initialize()
 
 void UMainMenuWidget::NewGameButtonClicked() 
 {
-    Auth::StartNewGame(GetWorld());
+    MainMenu::StartNewGame(GetWorld());
 }
