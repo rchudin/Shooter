@@ -2,7 +2,8 @@
 
 
 #include "MainMenuWidget.h"
-#include "Shooter/Core/MainMenu.h"
+#include "Kismet/GameplayStatics.h"
+#include "Shooter/UI/Widget/LoadingScreenInterface.h"
 
 
 UMainMenuWidget::UMainMenuWidget(const FObjectInitializer& ObjectInitializer): Super(ObjectInitializer)
@@ -24,7 +25,18 @@ bool UMainMenuWidget::Initialize()
     return true;
 }
 
-void UMainMenuWidget::NewGameButtonClicked() 
+void UMainMenuWidget::NewGameButtonClicked()
 {
-    MainMenu::StartNewGame(GetWorld());
+    if (!NewGameMap.IsNull())
+    {
+        ILoadingScreenInterface* LoadingScreen = Cast<ILoadingScreenInterface>(GetGameInstance());
+        if (LoadingScreen) LoadingScreen->AddLoadingScreenToViewport();
+
+        FTimerHandle Handle;
+        GetWorld()->GetTimerManager().SetTimer(Handle, [this]()
+        {
+            UE_LOG(LogTemp, Log, TEXT("Open map '%s'"), *NewGameMap.GetAssetName());
+            UGameplayStatics::OpenLevel(GetWorld(), *NewGameMap.GetAssetName());
+        }, 1.5f, false);
+    }
 }

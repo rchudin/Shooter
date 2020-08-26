@@ -7,7 +7,7 @@
 AMainMenuHUD::AMainMenuHUD()
 {
     static ConstructorHelpers::FClassFinder<UMainMenuWidget>
-        MainMenuWidgetClassHelper(TEXT("/Game/Shooter/UI/BP_MainMenuWidget"));
+        MainMenuWidgetClassHelper(TEXT("/Game/Shooter/UI/WBP_MainMenu"));
 
     if (MainMenuWidgetClassHelper.Class)
     {

@@ -16,6 +16,9 @@ class SHOOTER_API UMainMenuWidget : public UUserWidget
     UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget, AllowPrivateAccess = "true"))
     class UButton* BTNNewGame;
 
+    UPROPERTY(EditDefaultsOnly, Category = Maps, meta = (AllowPrivateAccess = "true"))
+    TAssetPtr<UWorld> NewGameMap;
+
 protected:
     virtual void NativeConstruct() override;
 

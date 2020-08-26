@@ -7,5 +7,9 @@
 
 AMainMenuGameMode::AMainMenuGameMode()
 {
-    HUDClass = AMainMenuHUD::StaticClass();
+    static ConstructorHelpers::FClassFinder<AHUD> HudBPClass(TEXT("/Game/Shooter/UI/BP_MainMenuHUD"));
+    if (HudBPClass.Class)
+    {
+        HUDClass = HudBPClass.Class;
+    }
 }
