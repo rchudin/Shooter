@@ -20,7 +20,10 @@ class SHOOTER_API AFireWeapon : public AWeapon
     class UAnimationAsset* ReloadAnimation;
 
     UPROPERTY(EditDefaultsOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
-    class UAnimMontage* CharacterReloadAnimMontage;
+    float ReloadAnimationLength = 0;
+    
+    UPROPERTY(EditDefaultsOnly, Category = Animation, meta = (AllowPrivateAccess = "true"))
+    class UAnimMontage* CharacterReloadAnimationMontage;
 
     UPROPERTY(EditDefaultsOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
     FName MuzzleSocket;

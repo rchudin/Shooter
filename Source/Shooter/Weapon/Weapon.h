@@ -36,6 +36,8 @@ protected:
 
     TFunction<void (FVector*, FVector*)> GetViewPointLambda;
 
+    virtual float PlayAnimMontage(class UAnimMontage* AnimMontage, const float InPlayRate = 1.f, const FName StartSectionName = NAME_None) const;
+
     virtual void OnRep_Instigator() override;
 
     FHitResult Trace(const FVector& Start, const FVector& End) const;

@@ -34,7 +34,9 @@ void AFireWeapon::OnRep_Scatter() const
 
 void AFireWeapon::OnRep_IsReloading() const
 {
-    PlayReloadingEffects();
+    if (IsReloading) {
+        PlayReloadingEffects();
+    }
 }
 
 void AFireWeapon::SetFunctionUpdatingWidgetCurrentAmmo(const TFunction<void(const int& Value)> Function)
@@ -173,11 +175,19 @@ void AFireWeapon::Reload()
 
 void AFireWeapon::PlayReloadingEffects() const
 {
-    // if (GetMesh() && ReloadAnimation) GetMesh()->PlayAnimation(ReloadAnimation, false);
+    if (GetMesh() && ReloadAnimation)
+    {
+        GetMesh()->PlayAnimation(ReloadAnimation, false);
+        if (ReloadAnimationLength > 0)
+        {
+            GetMesh()->SetPlayRate(ReloadAnimationLength / ReloadTime);
+        }
+    }
 
     ACharacter* Character = Cast<ACharacter>(GetInstigator());
-    if (Character)
+    if (Character && CharacterReloadAnimationMontage)
     {
-        Character->PlayAnimMontage(CharacterReloadAnimMontage);
+        const float AnimationLength = CharacterReloadAnimationMontage->GetPlayLength();
+        Character->PlayAnimMontage(CharacterReloadAnimationMontage, AnimationLength / ReloadTime);
     }
 }
