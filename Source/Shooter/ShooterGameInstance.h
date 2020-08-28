@@ -6,6 +6,7 @@
 #include "Engine/GameInstance.h"
 #include "Engine/DataTable.h"
 #include "Shooter/UI/Widget/LoadingScreenInterface.h"
+#include "Shooter/Core/UdpNetworking.h"
 #include "ShooterGameInstance.generated.h"
 
 
@@ -23,8 +24,15 @@ class SHOOTER_API UShooterGameInstance : public UGameInstance, public ILoadingSc
     UPROPERTY()
     class UUserWidget* LoadingScreenWidget;
 
+    TSharedPtr<FUdpNetworking> UdpNetworking;
+
 protected:
+    virtual void Init() override;
+    
     virtual void LoadComplete(const float LoadTime, const FString& MapName) override;
+
+    virtual FGameInstancePIEResult StartPlayInEditorGameInstance(ULocalPlayer* LocalPlayer,
+                                                                 const FGameInstancePIEParameters& Params) override;
 
 public:
     UShooterGameInstance();
