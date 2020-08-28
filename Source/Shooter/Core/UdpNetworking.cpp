@@ -20,7 +20,7 @@ FUdpNetworking::~FUdpNetworking()
 
 void FUdpNetworking::InitSocket()
 {
-    Socket = FUdpSocketBuilder(UDP_NETWORKING_SOCKET_DESCRIPTION).AsReusable().WithBroadcast();
+    Socket = FUdpSocketBuilder(UDP_NETWORKING_SOCKET_DESCRIPTION);
     Socket->SetSendBufferSize(MaxBufferSize, MaxBufferSize);
     Socket->SetReceiveBufferSize(MaxBufferSize, MaxBufferSize);
 }
@@ -42,4 +42,21 @@ bool FUdpNetworking::SendMessage(const FString& Message, const FInternetAddr& De
     int32 BytesSent = 0;
     const bool Success = Socket->SendTo((uint8*)Data.Get(), Data.Length(), BytesSent, Destination);
     return Success && BytesSent > 0;
+}
+
+FString FUdpNetworking::WaitForRead(FInternetAddr* Source, const FTimespan& WaitTime)
+{
+    if (!Socket->Wait(ESocketWaitConditions::WaitForRead, WaitTime)) return FString();
+    if (!Source)
+    {
+        const auto TmpSource = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
+        Source = &TmpSource.Get();
+    }
+    uint8* Data = new uint8[MaxBufferSize];
+    int32 CountBytesRead = 0;
+    Socket->RecvFrom(Data, MaxBufferSize, CountBytesRead, *Source);
+    if (CountBytesRead <= 0) return FString();
+    FString Output = FString(UTF8_TO_TCHAR(static_cast<UTF8CHAR*>(Data)));
+    delete Data;
+    return Output;
 }

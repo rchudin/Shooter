@@ -23,6 +23,8 @@ void UShooterGameInstance::Init()
 {
     Super::Init();
 
+
+    // TMP ... 
     UdpNetworking = MakeShareable(new FUdpNetworking);
     auto RemoteAddress = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
     bool bIsValid;
@@ -31,7 +33,18 @@ void UShooterGameInstance::Init()
     if (bIsValid)
     {
         UdpNetworking->SendMessage(FString("Hello world! =} #@22@#"), *RemoteAddress);
+        const FTimespan WaitTime = FTimespan::FromSeconds(5);
+        const FString ReadMsg = UdpNetworking->WaitForRead(nullptr, WaitTime);
+        if (ReadMsg.IsEmpty())
+        {
+            UE_LOG(LogTemp, Error, TEXT("Error read MSG!!!"));
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Msg from server: %s"), *ReadMsg);
+        }
     }
+    // TMP
 }
 
 void UShooterGameInstance::LoadComplete(const float LoadTime, const FString& MapName)

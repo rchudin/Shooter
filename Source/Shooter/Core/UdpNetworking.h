@@ -22,4 +22,6 @@ public:
     ~FUdpNetworking();
 
     virtual bool SendMessage(const FString& Message, const FInternetAddr& Destination) override;
+
+    virtual FString WaitForRead(FInternetAddr *Source, const FTimespan& WaitTime) override;
 };

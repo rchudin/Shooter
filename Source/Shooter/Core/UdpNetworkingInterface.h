@@ -24,4 +24,10 @@ public:
         check(0 && "You must override this");
         return false;
     }
+
+    virtual FString WaitForRead(FInternetAddr *Source, const FTimespan& WaitTime)
+    {
+        check(0 && "You must override this");
+        return FString();
+    } 
 };
