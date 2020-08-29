@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Shooter/Core/UdpNetworkingInterface.h"
+#include "UdpNetworkingInterface.h"
 
 
 class SHOOTER_API FUdpNetworking : public IUdpNetworkingInterface

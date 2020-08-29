@@ -20,7 +20,7 @@ FUdpNetworking::~FUdpNetworking()
 
 void FUdpNetworking::InitSocket()
 {
-    Socket = FUdpSocketBuilder(UDP_NETWORKING_SOCKET_DESCRIPTION);
+    Socket = FUdpSocketBuilder(UDP_NETWORKING_SOCKET_DESCRIPTION).AsReusable();
     Socket->SetSendBufferSize(MaxBufferSize, MaxBufferSize);
     Socket->SetReceiveBufferSize(MaxBufferSize, MaxBufferSize);
 }
