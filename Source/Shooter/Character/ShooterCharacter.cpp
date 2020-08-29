@@ -97,23 +97,6 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	CreateWidgets();
-	
-	/* TEMPORARY */
-	if (HasAuthority())
-	{
-		const AShooterPlayerState* PState = NewController->GetPlayerState<AShooterPlayerState>();
-		if (PState)
-		{
-			const FWeaponInstance* WeaponInstance = PState->GetDefaultMainWeapon();
-			if (WeaponInstance)
-			{
-				AWeapon* NewWeapon = AWeapon::CreateWeapon(GetWorld(), WeaponInstance->Weapon, this->GetActorLocation());
-				NewWeapon->RecoverConsumables();
-				if (NewWeapon) WeaponManager->TakeWeapon(NewWeapon);
-			}
-		}
-	}
-	/* TEMPORARY */
 }
 
 void AShooterCharacter::UnPossessed()
