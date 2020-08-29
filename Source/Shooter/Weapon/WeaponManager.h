@@ -6,11 +6,12 @@
 #include "Components/ActorComponent.h"
 #include "FireWeapon.h"
 #include "Shooter/UI/Widget/AmmoWidget.h"
+#include "InteractPawnsWeaponInterface.h"
 #include "WeaponManager.generated.h"
 
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class SHOOTER_API UWeaponManager : public UActorComponent
+class SHOOTER_API UWeaponManager : public UActorComponent, public IInteractPawnsWeaponInterface
 {
     GENERATED_BODY()
 
@@ -66,7 +67,7 @@ public:
 
     void RemoveWidgets() const;
 
-    void TakeWeapon(AWeapon* Weapon);
+    virtual bool TakeWeapon(AWeapon* Weapon) override;
 
     void UseWeapon() const;
 

@@ -14,7 +14,7 @@
 #include "ShooterCharacter.generated.h"
 
 UCLASS(config=Game)
-class AShooterCharacter : public ACharacter
+class AShooterCharacter : public ACharacter, public IInteractPawnsWeaponInterface
 {
 	GENERATED_BODY()
 
@@ -152,4 +152,6 @@ public:
 	FORCEINLINE class UArrowComponent* GetLeftFootArrow() const { return LeftFootArrow; }
 	/** Returns WeaponManager sub object **/
 	FORCEINLINE class UWeaponManager* GetWeaponManager() const { return WeaponManager; }
+	/** Interact weapon manager with weapon */
+	FORCEINLINE virtual bool TakeWeapon(AWeapon* Weapon) override { return WeaponManager ? WeaponManager->TakeWeapon(Weapon) : false; }
 };

@@ -111,7 +111,7 @@ void UWeaponManager::AttachCurrentWeapon()
     }
 }
 
-void UWeaponManager::TakeWeapon(AWeapon* Weapon)
+bool UWeaponManager::TakeWeapon(AWeapon* Weapon)
 {
     APawn* Pawn = Cast<APawn>(GetOwner());
     LOG_INSTANCE(LogTemp, Log, Pawn->HasAuthority(), TEXT("%s"), TEXT(__FUNCTION__));
@@ -123,7 +123,9 @@ void UWeaponManager::TakeWeapon(AWeapon* Weapon)
         CurrentWeapon->SetOwner(Pawn->GetController());
 
         AttachCurrentWeapon();
+        return true;
     }
+    return false;
 }
 
 void UWeaponManager::UseWeapon() const
