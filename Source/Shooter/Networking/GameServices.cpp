@@ -5,7 +5,8 @@
 #include "SocketSubsystem.h"
 
 
-FGameServices::FGameServices(FString AddressServices, int32 PortServices): Address(AddressServices), Port(PortServices)
+FGameServices::FGameServices(FString AddressServices, const int32& PortServices): Address(MoveTemp(AddressServices)),
+                                                                                  Port(PortServices)
 {
     InitUdpNetworking();
     Ping();
@@ -13,18 +14,22 @@ FGameServices::FGameServices(FString AddressServices, int32 PortServices): Addre
 
 bool FGameServices::InitUdpNetworking()
 {
-    auto RemoteAddress = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
-    bool bRemoteAddressIsValid;
-    RemoteAddress->SetIp(*Address, bRemoteAddressIsValid);
-    RemoteAddress->SetPort(Port);
-    if (bRemoteAddressIsValid)
+    if (!UdpNetworking)
     {
-        UdpNetworking = MakeShareable(new FUdpNetworking);
-        Status = EGameServicesStatus::Success;
-        return true;
+        auto RemoteAddress = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
+        bool bRemoteAddressIsValid;
+        RemoteAddress->SetIp(*Address, bRemoteAddressIsValid);
+        RemoteAddress->SetPort(Port);
+        if (bRemoteAddressIsValid)
+        {
+            UdpNetworking = MakeShareable(new FUdpNetworking);
+            Status = EGameServicesStatus::Success;
+            return true;
+        }
+        Status = EGameServicesStatus::Error;
+        return false; 
     }
-    Status = EGameServicesStatus::Error;
-    return false;
+    return true; 
 }
 
 bool FGameServices::Ping()

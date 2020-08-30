@@ -9,20 +9,23 @@
 
 class SHOOTER_API FGameServices : public IGameServicesInterface
 {
+    FGameServices(const FGameServices& FGameServices):
+        Address(FGameServices.Address), Port(FGameServices.Port){}
+    
     EGameServicesStatus Status = EGameServicesStatus::Undefined;
 
     TSharedPtr<FUdpNetworking> UdpNetworking;
 
-    FString& Address;
+    FString Address;
 
-    int32& Port;
+    int32 Port;
 
     bool InitUdpNetworking();
 
     bool Ping();
 
 public:
-    FGameServices(FString AddressServices, int32 PortServices);
+    FGameServices(FString AddressServices, const int32& PortServices);
 
     inline bool operator==(const EGameServicesStatus& Other) const { return Status == Other; }
 
