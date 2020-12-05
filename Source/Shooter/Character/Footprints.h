@@ -5,12 +5,8 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Components/ArrowComponent.h"
-#include "DrawDebugHelpers.h"
 #include "Engine/DecalActor.h"
-#include "Engine/World.h"
-#include "Kismet/GameplayStatics.h"
 #include "Engine/EngineTypes.h"
-#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Footprints.generated.h"
 
 
@@ -43,11 +39,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Character")
 		void FootDown(const UArrowComponent* FootArrow) const;
 
-	UFUNCTION(BlueprintCallable, Category = "Character")
-	UParticleSystem* GetFootprintFX(UPhysicalMaterial* PhysMaterial) const;
+	//UFUNCTION(BlueprintCallable, Category = "Character")
+	UParticleSystem* GetFootprintFX(const UPhysicalMaterial* PhysMaterial) const;
 
-	UFUNCTION(BlueprintCallable, Category = "Character")
-	UMaterialInterface* GetFootprintDecal(UPhysicalMaterial* PhysMaterial) const;
+	// UFUNCTION(BlueprintCallable, Category = "Character")
+	UMaterialInterface* GetFootprintDecal(const UPhysicalMaterial* PhysMaterial) const;
 
 
 protected:

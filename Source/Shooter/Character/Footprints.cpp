@@ -2,8 +2,9 @@
 #define SURFACE_TYPE_SAND    SurfaceType1
 
 #include "Footprints.h"
-
-
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 
 // Sets default values for this component's properties
 UFootprints::UFootprints()
@@ -11,12 +12,12 @@ UFootprints::UFootprints()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
 }
 
 void UFootprints::FootDown(const UArrowComponent* FootArrow) const
 {
-	if (FootArrow) {
+	if (FootArrow)
+	{
 		FHitResult HitResult;
 		FVector FootWorldPosition = FootArrow->GetComponentTransform().GetLocation();
 
@@ -45,49 +46,41 @@ void UFootprints::FootDown(const UArrowComponent* FootArrow) const
 			Decal->SetActorScale3D(FVector(0.1f, 0.1f, 0.1f));
 			Decal->SetLifeSpan(5.0f);
 		}
-
+		
 		if (ParticleFX) {
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ParticleFX, HitResult.Location);
 		}
 	}
 }
 
-UParticleSystem* UFootprints::GetFootprintFX(UPhysicalMaterial* PhysMaterial) const
+UParticleSystem* UFootprints::GetFootprintFX(const UPhysicalMaterial* PhysicalMaterial) const
 {
-	const EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(PhysMaterial);
-
-	UParticleSystem* Result;
-
-	switch (SurfaceType)
+	if (!PhysicalMaterial)
+	{
+		return DefaultFX;
+	}
+	switch (PhysicalMaterial->SurfaceType)
 	{
 	case SURFACE_TYPE_SAND:
-		Result = SandFX;
-		break;
+		return SandFX;
 	default:
-		Result = DefaultFX;
-		break;
+		return DefaultFX;
 	}
-
-	return Result;
 }
 
-UMaterialInterface* UFootprints::GetFootprintDecal(UPhysicalMaterial* PhysMaterial) const
+UMaterialInterface* UFootprints::GetFootprintDecal(const UPhysicalMaterial* PhysicalMaterial) const
 {
-	const EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(PhysMaterial); 
-
-	UMaterialInterface* Result;
-
-	switch (SurfaceType)
+	if (!PhysicalMaterial)
 	{
-		case SURFACE_TYPE_SAND:
-			Result =  SandFootprint;
-			break;
-		default: 
-			Result = DefaultFootprint;
-			break;
+		return DefaultFootprint;
 	}
-	
-	return Result;
+	switch (PhysicalMaterial->SurfaceType)
+	{
+	case SURFACE_TYPE_SAND:
+		return SandFootprint;
+	default:
+		return DefaultFootprint;
+	}
 }
 
 void UFootprints::Trace(FHitResult& OutHit, FVector& Location) const
